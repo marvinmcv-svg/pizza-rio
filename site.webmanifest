@@ -1,0 +1,13 @@
+{
+  "name": "Pizza Río",
+  "short_name": "Pizza Río",
+  "description": "Pizzas familiares de 8 porciones en 21 sucursales de Santa Cruz. #ConVosEnTodas",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#fff7dc",
+  "theme_color": "#ce160f",
+  "icons": [
+    { "src": "assets/brand/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "assets/brand/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}

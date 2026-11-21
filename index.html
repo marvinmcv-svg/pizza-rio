@@ -1,0 +1,347 @@
+<!doctype html>
+<html lang="es-BO">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Pizza Río · #ConVosEnTodas · Santa Cruz</title>
+  <meta name="description" content="Pizza Río: 21 sucursales en Santa Cruz, Bolivia. Pizzas familiares de 8 porciones desde Bs 52, Combo Río 2 pa' 2 a Bs 92 y Martes de ChocloMix a Bs 36. Pedí por WhatsApp a tu sucursal.">
+  <meta name="theme-color" content="#ce160f">
+  <link rel="canonical" href="https://pizza-rio.vercel.app/">
+  <link rel="icon" href="favicon.ico" sizes="48x48">
+  <link rel="icon" type="image/png" sizes="32x32" href="assets/brand/favicon-32.png">
+  <link rel="apple-touch-icon" href="assets/brand/apple-touch-icon.png">
+  <link rel="manifest" href="site.webmanifest">
+
+  <meta property="og:type" content="restaurant">
+  <meta property="og:site_name" content="Pizza Río">
+  <meta property="og:title" content="Pizza Río · #ConVosEnTodas">
+  <meta property="og:description" content="21 sucursales en Santa Cruz. Pedí tu Río favorita por WhatsApp. 🍕">
+  <meta property="og:image" content="https://pizza-rio.vercel.app/assets/brand/pizzario-logo-share.jpg">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="1200">
+  <meta property="og:locale" content="es_BO">
+  <meta property="og:url" content="https://pizza-rio.vercel.app/">
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="Pizza Río · #ConVosEnTodas">
+  <meta name="twitter:description" content="21 sucursales en Santa Cruz. Pedí tu Río favorita por WhatsApp. 🍕">
+  <meta name="twitter:image" content="https://pizza-rio.vercel.app/assets/brand/pizzario-logo-share.jpg">
+
+  <script type="application/ld+json">
+  {"@context":"https://schema.org","@type":"Restaurant","name":"Pizza Río","servesCuisine":"Pizza",
+   "image":"https://pizza-rio.vercel.app/assets/brand/pizzario-logo-share.jpg",
+   "address":{"@type":"PostalAddress","addressLocality":"Santa Cruz de la Sierra","addressCountry":"BO"},
+   "telephone":"+59178462865","priceRange":"Bs 36 – Bs 92",
+   "sameAs":["https://www.instagram.com/pizzario.bolivia/","https://www.facebook.com/pizzariosantacruz","https://linktr.ee/pizzario.bolivia"]}
+  </script>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lilita+One&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,700&display=swap">
+  <link rel="stylesheet" href="css/styles.css">
+  <link rel="preload" as="image" href="assets/hero/queso-derretido.webp">
+</head>
+<body>
+<a class="skip" href="#main">Saltar al contenido</a>
+
+<header class="nav" id="nav">
+  <div class="wrap nav__in">
+    <a class="nav__brand" href="#top" aria-label="Pizza Río, inicio">
+      <img src="assets/img/logo.png" width="44" height="44" alt="">
+      <span>Pizza Río</span>
+    </a>
+    <nav class="nav__links" id="navLinks" aria-label="Principal">
+      <a href="#menu">Menú</a><a href="#promos">Promos</a><a href="#pedir">Pedir</a><a href="#sucursales">Sucursales</a><a href="#historia">Historia</a>
+      <button class="nav__ai" type="button" data-ria-open>Preguntale a Ría ✨</button>
+    </nav>
+    <button class="nav__cart" type="button" id="cartBtn" aria-label="Abrir pedido">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 7h12l-1 13H7L6 7z"/><path d="M9 7a3 3 0 0 1 6 0"/></svg>
+      <span>Pedir</span><b class="nav__count" id="cartCount">0</b>
+    </button>
+    <button class="nav__burger" type="button" id="burger" aria-label="Menú" aria-expanded="false" aria-controls="navLinks"><span></span><span></span></button>
+  </div>
+</header>
+
+<main id="main">
+<section class="hero" id="top">
+  <div class="hero__grain" aria-hidden="true"></div>
+  <div class="hero__glow" aria-hidden="true"></div>
+  <div class="wrap hero__in">
+    <p class="live" id="livePill"><i class="dot"></i><span>21 sucursales en Santa Cruz</span></p>
+    <h1 class="hero__title">
+      <span class="mask"><span>Con vos</span></span>
+      <span class="mask"><span class="hl">en todas.</span></span>
+    </h1>
+    <div class="hero__grid">
+      <div class="hero__left">
+        <p class="hero__lede">Pizzas familiares de 8 porciones, recién salidas del horno de tu sucursal más cercana. ¡Estás advertido! ⚠️</p>
+        <div class="hero__ctas">
+          <a class="btn btn--mustard btn--lg" href="#pedir">Pedí por WhatsApp →</a>
+          <a class="btn btn--ghost btn--lg" href="#menu">Ver el menú</a>
+        </div>
+      </div>
+      <div class="fan" id="fan">
+        <figure class="fan__card fan__card--l"><video muted playsinline loop autoplay preload="auto" poster="assets/hero/churrasco-horno.webp" src="assets/hero/churrasco-horno.mp4"></video><figcaption><b>Horno</b> Bs 63</figcaption></figure>
+        <figure class="fan__card fan__card--r"><video muted playsinline loop autoplay preload="auto" poster="assets/hero/churrasco-caja.webp" src="assets/hero/churrasco-caja.mp4"></video><figcaption><b>Buri</b> Bs 69</figcaption></figure>
+        <figure class="fan__card fan__card--c"><video muted playsinline loop autoplay preload="auto" poster="assets/hero/queso-derretido.webp" src="assets/hero/queso-derretido.mp4"></video><figcaption><b>Churrasco</b> 🔥</figcaption></figure>
+        <div class="sticker" aria-hidden="true">
+          <svg viewBox="0 0 120 120"><defs><path id="circ" d="M60,60 m-44,0 a44,44 0 1,1 88,0 a44,44 0 1,1 -88,0"/></defs>
+            <text><textPath href="#circ">TAMAÑO FAMILIAR · 8 PORCIONES · PIZZA RÍO ·</textPath></text></svg>
+          <b>8</b>
+        </div>
+      </div>
+      <ul class="stats" id="stats"></ul>
+    </div>
+  </div>
+  <div class="dots dots--hero" aria-hidden="true"></div>
+</section>
+
+<div class="marquee" aria-hidden="true"><div class="marquee__track" id="marquee"></div></div>
+
+<section class="sec sec--cream" id="promos">
+  <div class="wrap">
+    <div class="head">
+      <p class="eyebrow">Promos vigentes</p>
+      <h2 class="display">Excusas para <span class="hl">pedir ya ya ya.</span></h2>
+      <p class="sub">Precios publicados en nuestro Instagram. La card de hoy se marca sola.</p>
+    </div>
+    <div class="weekly" id="weekly"></div>
+  </div>
+</section>
+
+<section class="sec sec--deep spot" id="especial"></section>
+
+<section class="sec sec--cream" id="menu">
+  <div class="wrap">
+    <div class="head head--row">
+      <div>
+        <p class="eyebrow">El menú</p>
+        <h2 class="display">Una sola medida, <span class="hl">mil antojos.</span></h2>
+      </div>
+      <div class="coins"><div class="coin"><b>8</b><span>porciones<br>familiar</span></div></div>
+    </div>
+    <div class="tabs" role="tablist" id="menuTabs"></div>
+    <div class="menu-list" id="menuList" role="tabpanel"></div>
+    <button class="btn btn--red more" id="menuMore" type="button" hidden></button>
+    <div class="addons" id="addons"></div>
+  </div>
+</section>
+
+<section class="sec sec--wine" id="combos">
+  <div class="wrap">
+    <div class="head">
+      <p class="eyebrow">Combos</p>
+      <h2 class="display">Para el junte, <span class="hl">hay Combo.</span></h2>
+    </div>
+    <div class="combos" id="combosGrid"></div>
+    <h3 class="subhead">Las que más salen</h3>
+    <div class="featured" id="featured"></div>
+    <p class="fine">Precios en bolivianos según nuestras publicaciones de Instagram. Confirmá disponibilidad con tu sucursal al pedir.</p>
+  </div>
+</section>
+
+<section class="sec sec--red reels" id="reels">
+  <div class="wrap head head--row">
+    <div>
+      <p class="eyebrow">Reels</p>
+      <h2 class="display">Mirá, <span class="hl">pero no babees.</span></h2>
+    </div>
+    <div class="rail-btns">
+      <button class="icon-btn" type="button" id="reelPrev" aria-label="Anterior">←</button>
+      <button class="icon-btn" type="button" id="reelNext" aria-label="Siguiente">→</button>
+    </div>
+  </div>
+  <div class="rail" id="reelRail"></div>
+</section>
+
+<section class="sec sec--wine funnel" id="pedir">
+  <div class="wrap funnel__grid">
+    <div>
+      <p class="eyebrow">Pedí en 4 pasos</p>
+      <h2 class="display">Directo al WhatsApp <span class="hl">de tu sucursal.</span></h2>
+      <ol class="steps" id="steps">
+        <li><button type="button" data-step="1">01 · Qué necesitás</button></li>
+        <li><button type="button" data-step="2">02 · Detalles</button></li>
+        <li><button type="button" data-step="3">03 · Tus datos</button></li>
+        <li><button type="button" data-step="4">04 · Enviar</button></li>
+      </ol>
+      <form class="flow" id="flow" novalidate>
+        <fieldset class="step" data-step="1">
+          <legend class="sr">Qué necesitás</legend>
+          <div class="intents">
+            <label class="intent"><input type="radio" name="intent" value="delivery" checked><span><i>01</i><b>Delivery</b><small>Te la llevamos</small></span></label>
+            <label class="intent"><input type="radio" name="intent" value="pickup"><span><i>02</i><b>Paso a recoger</b><small>Para llevar</small></span></label>
+            <label class="intent"><input type="radio" name="intent" value="event"><span><i>03</i><b>Mesa / evento</b><small>Cumple, empresa, junte</small></span></label>
+            <label class="intent"><input type="radio" name="intent" value="question"><span><i>04</i><b>Consulta</b><small>Preguntá lo que sea</small></span></label>
+          </div>
+        </fieldset>
+        <fieldset class="step" data-step="2" hidden>
+          <legend class="sr">Detalles</legend>
+          <div data-for="order">
+            <div class="flow-cart" id="flowCart"></div>
+            <div class="picker">
+              <div class="tabs tabs--sm" id="pickTabs"></div>
+              <div class="pick-list" id="pickList"></div>
+            </div>
+          </div>
+          <div data-for="event" hidden>
+            <div class="row3">
+              <label>Fecha<input type="date" name="evDate"></label>
+              <label>Hora<input type="time" name="evTime"></label>
+              <label>Personas<input type="number" name="evPeople" min="1" inputmode="numeric"></label>
+            </div>
+            <div class="chips" data-name="occasion">
+              <button type="button" class="chip">🎂 Cumpleaños</button><button type="button" class="chip">💼 Empresa</button><button type="button" class="chip">👨‍👩‍👧 Familia</button><button type="button" class="chip">🍕 Amigos</button>
+            </div>
+            <label>Nota<textarea name="evNote" rows="3" placeholder="Contanos un poco más"></textarea></label>
+          </div>
+          <div data-for="question" hidden>
+            <div class="chips" data-name="topic">
+              <button type="button" class="chip">Precios</button><button type="button" class="chip">Promos</button><button type="button" class="chip">Delivery</button><button type="button" class="chip">Horarios</button><button type="button" class="chip">Otro</button>
+            </div>
+            <label>Tu consulta<textarea name="qText" rows="4" placeholder="Escribí tu pregunta"></textarea></label>
+            <button type="button" class="linkish" data-ria-open>¿Querés respuesta al toque? Preguntale a Ría ✨</button>
+          </div>
+        </fieldset>
+        <fieldset class="step" data-step="3" hidden>
+          <legend class="sr">Tus datos</legend>
+          <label>Tu nombre<input name="name" autocomplete="name" required></label>
+          <label>Sucursal<select name="branch" id="branchSel"></select></label>
+          <div data-for="delivery">
+            <label>Dirección<input name="address" autocomplete="street-address" placeholder="Barrio, calle, número"></label>
+            <label>Referencia<input name="ref" placeholder="Casa de rejas verdes, frente al…"></label>
+          </div>
+          <div data-for="when">
+            <span class="lbl">¿Para cuándo?</span>
+            <div class="chips" data-name="when" data-single>
+              <button type="button" class="chip is-on" data-v="asap">⚡ Lo antes posible</button><button type="button" class="chip" data-v="later">🕒 Programar</button>
+            </div>
+            <label class="when-time" hidden>Hora<input type="time" name="whenTime"></label>
+          </div>
+          <label>Nota (opcional)<input name="note" placeholder="Sin cebolla, cambio de 200…"></label>
+        </fieldset>
+        <fieldset class="step" data-step="4" hidden>
+          <legend class="sr">Enviar</legend>
+          <div class="summary" id="summary"></div>
+          <a class="btn btn--wa btn--lg btn--block" id="sendWa" href="#" target="_blank" rel="noopener">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2zm5.3 14.2c-.2.6-1.3 1.2-1.8 1.2-.5.1-1 .2-3.3-.7-2.8-1.1-4.5-3.9-4.7-4.1-.1-.2-1.1-1.5-1.1-2.9s.7-2 1-2.3c.2-.3.5-.3.7-.3h.5c.2 0 .4 0 .6.5l.8 2c.1.2.1.3 0 .5l-.3.5-.4.4c-.1.1-.3.3-.1.6.2.3.7 1.2 1.6 2 1.1.9 2 1.2 2.2 1.4.3.1.5.1.6-.1l.9-1c.2-.3.4-.2.6-.1l1.9.9c.3.1.5.2.5.3.1.2.1.7-.1 1.2z"/></svg>
+            Enviar por WhatsApp</a>
+        </fieldset>
+        <p class="flow-msg" id="flowMsg" aria-live="polite"></p>
+        <div class="flow-nav">
+          <button type="button" class="btn btn--ghost" id="flowBack">← Atrás</button>
+          <button type="button" class="btn btn--mustard" id="flowNext">Siguiente →</button>
+        </div>
+      </form>
+    </div>
+    <div class="phone-wrap">
+      <div class="phone" aria-label="Vista previa del mensaje de WhatsApp">
+        <div class="phone__notch"></div>
+        <div class="phone__head"><img src="assets/img/logo.png" width="36" height="36" alt=""><div><b id="phName">Pizza Río · Call center</b><small id="phNum">+591 784 62865</small></div></div>
+        <div class="phone__chat" id="phChat">
+          <div class="bub bub--in">¡Hola! 👋 Bienvenido a Pizza Río. ¿Qué se te antoja hoy? 🍕<time>12:00</time></div>
+          <div class="bub bub--out" id="phOut">…<time></time></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="sec sec--cream" id="sucursales">
+  <div class="wrap">
+    <div class="head head--row">
+      <div>
+        <p class="eyebrow">Sucursales</p>
+        <h2 class="display">21 Ríos <span class="hl">en Santa Cruz.</span></h2>
+      </div>
+      <p class="clock" id="clock">Santa Cruz</p>
+    </div>
+    <div class="branches" id="branches"></div>
+    <div class="deliv">
+      <div>
+        <h3>¿Delivery? Pedí a tu sucursal más cercana.</h3>
+        <p>Cada sucursal atiende su propio WhatsApp. Si no sabés cuál te queda, escribile al call center: 784-62865.</p>
+      </div>
+      <a class="btn btn--red btn--lg" href="#pedir">Armar mi pedido</a>
+    </div>
+  </div>
+</section>
+
+<section class="sec sec--partner" id="alianza"></section>
+
+<section class="sec sec--wine story" id="historia"></section>
+
+<section class="sec sec--cream" id="instagram">
+  <div class="wrap">
+    <div class="head head--row">
+      <div>
+        <p class="eyebrow">@pizzario.bolivia</p>
+        <h2 class="display">Más de 23K <span class="hl">Río Lovers.</span></h2>
+      </div>
+      <a class="btn btn--red" href="https://www.instagram.com/pizzario.bolivia/" target="_blank" rel="noopener">Seguinos en Instagram ↗</a>
+    </div>
+    <div class="feed" id="feed"></div>
+  </div>
+</section>
+</main>
+
+<footer class="foot">
+  <div class="dots" aria-hidden="true"></div>
+  <div class="wrap foot__in">
+    <div class="foot__brand">
+      <img src="assets/img/logo.png" width="72" height="72" alt="Pizza Río" loading="lazy">
+      <p class="foot__sign">¡Nos vemos en Río!</p>
+    </div>
+    <div>
+      <h3>Visitanos</h3>
+      <p>21 sucursales en Santa Cruz de la Sierra.<br>Call center por WhatsApp: <a href="https://wa.me/59178462865" target="_blank" rel="noopener">784-62865</a></p>
+    </div>
+    <div>
+      <h3>Seguinos</h3>
+      <p><a href="https://www.instagram.com/pizzario.bolivia/" target="_blank" rel="noopener">Instagram</a> · <a href="https://www.facebook.com/pizzariosantacruz" target="_blank" rel="noopener">Facebook</a> · <a href="https://linktr.ee/pizzario.bolivia" target="_blank" rel="noopener">Linktree</a></p>
+      <p><a href="#menu">Menú</a> · <a href="#promos">Promos</a> · <a href="#sucursales">Sucursales</a></p>
+    </div>
+  </div>
+  <div class="wrap foot__bottom"><span>© <span id="year">2026</span> Pizza Río · #ConVosEnTodas</span><span>Hecho con hambre en Santa Cruz 🍕</span></div>
+</footer>
+
+<!-- Carrito -->
+<div class="scrim" id="scrim" hidden></div>
+<aside class="drawer" id="drawer" role="dialog" aria-modal="true" aria-labelledby="drawerTitle" hidden>
+  <div class="drawer__head"><h2 id="drawerTitle">Tu pedido</h2><button class="icon-btn icon-btn--dark" type="button" id="drawerClose" aria-label="Cerrar">✕</button></div>
+  <div class="drawer__body" id="drawerBody"></div>
+  <div class="drawer__foot"><div class="total"><span>Total</span><b id="drawerTotal">Bs 0</b></div><button class="btn btn--red btn--lg btn--block" type="button" id="drawerGo">Continuar pedido →</button></div>
+</aside>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<!-- Ría -->
+<button class="ria-fab" type="button" data-ria-open aria-label="Abrir chat con Ría">
+  <img src="assets/img/logo.png" width="40" height="40" alt=""><span><b>Ría</b><small>¿Te ayudo?</small></span><i class="dot"></i>
+</button>
+<section class="ria" id="ria" role="dialog" aria-modal="false" aria-labelledby="riaTitle" hidden>
+  <header class="ria__head">
+    <img src="assets/img/logo.png" width="40" height="40" alt="">
+    <div><h2 id="riaTitle">Ría</h2><small><i class="dot"></i> Recepcionista virtual de Pizza Río</small></div>
+    <button class="icon-btn" type="button" id="riaClose" aria-label="Cerrar chat">✕</button>
+  </header>
+  <div class="ria__log" id="riaLog" aria-live="polite"></div>
+  <div class="ria__chips" id="riaChips"></div>
+  <form class="ria__form" id="riaForm">
+    <label class="sr" for="riaInput">Escribí tu pregunta</label>
+    <input id="riaInput" autocomplete="off" maxlength="1200" placeholder="Preguntale a Ría…">
+    <button type="submit" aria-label="Enviar">➤</button>
+  </form>
+  <p class="ria__disc">Ría es una IA y puede equivocarse. Confirmá tu pedido por WhatsApp.</p>
+</section>
+
+<!-- Barra móvil -->
+<div class="mbar" id="mbar">
+  <button type="button" class="mbar__ai" data-ria-open aria-label="Preguntale a Ría"><img src="assets/img/logo.png" width="34" height="34" alt=""></button>
+  <button type="button" class="mbar__cart" id="mbarCart" hidden><b id="mbarCount">0</b><span id="mbarTotal">Bs 0</span></button>
+  <a class="btn btn--mustard mbar__cta" href="#pedir">Pedí por WhatsApp →</a>
+</div>
+
+<script src="js/data.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
