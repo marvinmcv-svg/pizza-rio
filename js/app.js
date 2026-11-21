@@ -149,7 +149,7 @@
   function renderSpot() {
     const y = D.yapa, t = now(), el = $("#especial");
     if (!y || !active(y, t)) { el.remove(); return; }
-    el.innerHTML = '<div class="wrap spot__grid"><div class="spot__img reveal"><img src="' + esc(y.img) + '" width="900" height="1125" loading="lazy" alt="' + esc(y.name) + ' a ' + money(y.price) + '"></div><div class="reveal" style="--d:100ms"><p class="eyebrow">Todos los martes de ' + esc(y.month) + '</p><h2 class="spot__title">' + esc(y.name) + '</h2><p class="spot__lede">' + esc(y.lede) + '</p><div class="spot__price"><small>' + esc(C.currency) + "</small>" + y.price + '</div><button class="btn btn--mustard btn--lg" type="button" data-add="yapa-' + esc(y.id) + '">Agregar al pedido</button><p class="spot__fine">Válido los martes hasta el 30 de ' + esc(y.month) + ".</p></div></div>";
+    el.innerHTML = '<div class="wrap spot__grid"><div class="spot__img reveal"><img src="' + esc(y.img) + '" width="1200" height="782" loading="lazy" alt="' + esc(y.name) + ' a ' + money(y.price) + '"></div><div class="reveal" style="--d:100ms"><p class="eyebrow">Todos los martes de ' + esc(y.month) + '</p><h2 class="spot__title">' + esc(y.name) + '</h2><p class="spot__lede">' + esc(y.lede) + '</p><div class="spot__price"><small>' + esc(C.currency) + "</small>" + y.price + '</div><button class="btn btn--mustard btn--lg" type="button" data-add="yapa-' + esc(y.id) + '">Agregar al pedido</button><p class="spot__fine">Válido los martes hasta el 30 de ' + esc(y.month) + ".</p></div></div>";
   }
 
   /* ---------- menu ---------- */

@@ -53,9 +53,9 @@
       {
         id: "clasicas", name: "Clásicas", size: "Familiar · 8 porciones",
         items: [
-          { id: "americana", name: "Americana", price: 52, img: "assets/img/favoritos-americana.webp" }, // carta P("DdcUJiUidcu")
+          { id: "americana", name: "Americana", price: 52, img: "assets/img/feat-americana.webp" }, // carta P("DdcUJiUidcu")
           { id: "canadiense", name: "Canadiense", price: 52 }, // carta P("DdcUJiUidcu")
-          { id: "hawaiana", name: "Hawaiana", price: 54, img: "assets/img/favoritos-hawaiana.webp" }, // carta P("DdcUJiUidcu")
+          { id: "hawaiana", name: "Hawaiana", price: 54, img: "assets/img/feat-hawaiana.webp" }, // carta P("DdcUJiUidcu")
         ],
       },
       {
@@ -96,7 +96,7 @@
       // P("DceUjM0psfk") 26/08/2026: "extra de queso Catupiry en el borde por solo BS 15"
       bordes: { price: 15, items: ["Borde de Catupiry"] },
       // P("Dd3_-KgRwMr") 29/09/2026: "Sumá Bs 4 a tu pizza, elegí el sticker ... Disponible en todas las sucursales"
-      extras: { price: 4, items: ["Sticker dedicado en la caja"] },
+      extras: { price: 4, items: ["Sticker en la caja"] },
     },
 
     // Promos de la semana / de todos los días. day: 0=domingo … 6=sábado; null = todos los días.
@@ -127,16 +127,16 @@
 
     // Especial del mes (noviembre 2026): ChocloMix todos los martes.
     yapa: { id: "choclomix", name: "ChocloMix", price: 36, month: "noviembre", until: "2026-11-30",
-      img: "assets/img/choclomix-noviembre.webp",
+      img: "assets/img/spot-choclomix.webp", // recorte de P("DfSTFEWJZc0") sin titular ni precio
       lede: "Porque ustedes lo pidieron… el ChocloMix se queda. Mitad choclo + mitad jamón, todos los martes de noviembre.", // P("DfSTFEWJZc0")
     },
 
     featured: [
-      { ref: "churrasco", name: "Pizza Churrasco", tag: "Nueva", video: "assets/video/churrasco-combo",
+      { ref: "churrasco", name: "Pizza Churrasco", tag: "Nueva", video: "assets/video/churrasco-queso",
         desc: "Corte de ojo de bife, chorizo argentino y salsa churrasquera. Un homenaje a Santa Cruz.", price: 63 }, // P("DczjDIHpSeJ")
-      { ref: "hawaiana", name: "Hawaiana", tag: "Favorita de la casa", img: "assets/img/favoritos-hawaiana.webp",
+      { ref: "hawaiana", name: "Hawaiana", tag: "Favorita de la casa", img: "assets/img/feat-hawaiana.webp",
         desc: "De las más pedidas según nuestro equipo.", price: 54 }, // P("DdcUJiUidcu") "los verdaderos favoritos de la casa"
-      { ref: "americana", name: "Americana", tag: "Favorita de la casa", img: "assets/img/favoritos-americana.webp",
+      { ref: "americana", name: "Americana", tag: "Favorita de la casa", img: "assets/img/feat-americana.webp",
         desc: "Otra de las favoritas de la casa.", price: 52 }, // P("DdcUJiUidcu")
     ],
 
