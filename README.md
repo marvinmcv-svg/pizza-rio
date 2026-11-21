@@ -65,7 +65,7 @@ Todo está en `js/data.js`. Cambiá un precio, una promo o una sucursal ahí y s
 | Combo Buri (Bs 69): se publicó en septiembre sin fecha de fin; confirmá si sigue | `combos` |
 | Contenido y precio del Combo Navi (alianza Honda) y fecha de fin del sorteo | `partner` |
 | Año de fundación (hay un aniversario el 14 de marzo, sin año) | `story.timeline` |
-| Dominio final (los meta tags apuntan a `pizza-rio.vercel.app`) | `index.html` |
+| Dominio final (los meta tags apuntan a `pizza-rio-orpin.vercel.app`) | `index.html` |
 
 ## Promos con vencimiento
 
