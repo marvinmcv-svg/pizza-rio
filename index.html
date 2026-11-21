@@ -313,17 +313,22 @@
 <section class="ria" id="ria" role="dialog" aria-modal="false" aria-labelledby="riaTitle" hidden>
   <header class="ria__head">
     <img src="assets/img/logo.png" width="40" height="40" alt="">
-    <div><h2 id="riaTitle">Ría</h2><small><i class="dot"></i> Recepcionista virtual de Pizza Río</small></div>
+    <div><h2 id="riaTitle">Ría</h2><small id="riaState"><i class="dot"></i> <span>Tu asistente de pedidos</span></small></div>
+    <label class="hands" id="riaHandsWrap" hidden title="Manos libres: Ría escucha sola después de hablar"><input type="checkbox" id="riaHands"><span>Manos libres</span></label>
     <button class="icon-btn" type="button" id="riaClose" aria-label="Cerrar chat">✕</button>
   </header>
+  <button class="ria__cart" type="button" id="riaCart" hidden></button>
   <div class="ria__log" id="riaLog" aria-live="polite"></div>
   <div class="ria__chips" id="riaChips"></div>
   <form class="ria__form" id="riaForm">
-    <label class="sr" for="riaInput">Escribí tu pregunta</label>
-    <input id="riaInput" autocomplete="off" maxlength="1200" placeholder="Preguntale a Ría…">
+    <label class="sr" for="riaInput">Escribí tu pedido o pregunta</label>
+    <button class="ria__mic" type="button" id="riaMic" aria-label="Hablar con Ría" aria-pressed="false" hidden>
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg>
+    </button>
+    <input id="riaInput" autocomplete="off" maxlength="1200" placeholder="Pedí o preguntá… ej. «una Hawaiana con borde»">
     <button type="submit" aria-label="Enviar">➤</button>
   </form>
-  <p class="ria__disc">Ría es una IA y puede equivocarse. Confirmá tu pedido por WhatsApp.</p>
+  <p class="ria__disc">Ría es una IA y puede equivocarse. Tu pedido se confirma por WhatsApp con la sucursal.</p>
 </section>
 
 <!-- Barra móvil -->
@@ -334,6 +339,7 @@
 </div>
 
 <script src="js/data.js"></script>
+<script src="js/catalog.js"></script>
 <script src="js/app.js"></script>
 </body>
 </html>

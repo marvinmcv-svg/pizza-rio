@@ -2,9 +2,14 @@
   "name": "pizza-rio",
   "version": "1.0.0",
   "private": true,
-  "description": "Sitio de Pizza Río (Santa Cruz, Bolivia) + Ría, recepcionista virtual con IA.",
-  "engines": { "node": "22.x" },
-  "scripts": { "dev": "vercel dev" },
+  "description": "Sitio de Pizza Río (Santa Cruz, Bolivia) + Ría, asistente de pedidos con IA (texto y voz).",
+  "engines": {
+    "node": "22.x"
+  },
+  "scripts": {
+    "dev": "vercel dev",
+    "test": "node --test tests/golden/*.test.js"
+  },
   "dependencies": {
     "@anthropic-ai/sdk": "^1.12.0",
     "openai": "^4.77.0"

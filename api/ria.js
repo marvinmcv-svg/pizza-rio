@@ -1,16 +1,19 @@
-/* POST /api/ria · Ría, recepcionista virtual de Pizza Río.
-   Responde text/plain en streaming. Proveedor: Claude (Anthropic) o NVIDIA NIM.
-   Las claves se leen SOLO de variables de entorno. */
+/* POST /api/ria · Ría, asistente de pedidos de Pizza Río.
+   Responde text/plain en streaming. Entre el texto van eventos de UI codificados como
+   [[ui:BASE64(JSON)]] (carrito actualizado, pedido listo, chips, pasar a una persona).
+   Proveedor: Claude (Anthropic) o NVIDIA NIM. Las claves se leen SOLO de variables de entorno. */
 "use strict";
 const { SYSTEM_PROMPT, liveContext } = require("./_prompt.js");
+const T = require("./_tools.js");
 
+const MAX_TOOL_ROUNDS = 6;
 const hits = new Map();
 function limited(ip) {
   const t = Date.now();
   if (hits.size > 5000) hits.clear();
   const arr = (hits.get(ip) || []).filter((x) => t - x < 60000);
   arr.push(t); hits.set(ip, arr);
-  return arr.length > 12;
+  return arr.length > 20;
 }
 
 function sanitize(body) {
@@ -21,7 +24,6 @@ function sanitize(body) {
     .map((m) => ({ role: m.role, content: m.content.slice(0, 1200) }))
     .slice(-16);
   while (msgs.length && msgs[0].role !== "user") msgs.shift();
-  // une mensajes consecutivos del mismo rol
   msgs = msgs.reduce((a, m) => { const last = a[a.length - 1]; if (last && last.role === m.role) last.content += "\n" + m.content; else a.push({ ...m }); return a; }, []);
   if (!msgs.length || msgs[msgs.length - 1].role !== "user") return null;
   return msgs;
@@ -45,41 +47,80 @@ async function readBody(req) {
   try { return JSON.parse(Buffer.concat(chunks).toString("utf8")); } catch (e) { return null; }
 }
 
-async function streamAnthropic(res, messages) {
-  const Anthropic = require("@anthropic-ai/sdk");
-  const client = new Anthropic();
-  const stream = client.beta.messages.stream({
-    model: process.env.RIA_MODEL || "claude-sonnet-5-5",
-    max_tokens: 1024,
-    output_config: { effort: "low" },
-    // Si un clasificador de seguridad rechaza, el servidor reintenta con el modelo de respaldo.
-    betas: ["server-side-fallback-2026-07-01"],
-    fallbacks: "default",
-    system: [{ type: "text", text: SYSTEM_PROMPT, cache_control: { type: "ephemeral" } }],
-    // El contexto en vivo va después de la conversación (mensaje de sistema a mitad de conversación),
-    // así no rompe el caché del prompt estático.
-    messages: messages.concat([{ role: "system", content: liveContext(new Date()) }]),
-  });
-  for await (const event of stream) {
-    if (event.type === "content_block_delta" && event.delta.type === "text_delta") res.write(event.delta.text);
-  }
-  const final = await stream.finalMessage();
-  if (final.stop_reason === "refusal") res.write("\n\nDe eso no te puedo ayudar 🙏, pero sí con todo lo de Pizza Río: menú, promos y sucursales. 🍕");
-  else if (final.stop_reason === "max_tokens") res.write("…");
+const uiEvent = (ev) => "[[ui:" + Buffer.from(JSON.stringify(ev), "utf8").toString("base64") + "]]";
+function flush(res, st) { while (st.events.length) res.write(uiEvent(st.events.shift())); }
+function execTool(name, input, st) {
+  try { return T.run(name, input, st, new Date()); } catch (e) { console.error("[ria] tool", name, e && e.message); return { error: "La herramienta falló." }; }
 }
 
-async function streamNvidia(res, messages) {
+/* ---------- Claude ---------- */
+async function runAnthropic(res, messages, st, channel) {
+  const Anthropic = require("@anthropic-ai/sdk");
+  const client = new Anthropic();
+  const voice = channel === "voice";
+  const model = voice ? (process.env.RIA_VOICE_MODEL || "claude-haiku-5-5") : (process.env.RIA_MODEL || "claude-sonnet-5-5");
+  // El contexto en vivo va como mensaje de sistema DESPUÉS de la conversación: no rompe el caché.
+  const convo = messages.concat([{ role: "system", content: liveContext(new Date(), st, channel) }]);
+  let wrote = false;
+  for (let round = 0; round < MAX_TOOL_ROUNDS; round++) {
+    const params = {
+      model,
+      max_tokens: 1024,
+      output_config: { effort: "low" },
+      system: [{ type: "text", text: SYSTEM_PROMPT, cache_control: { type: "ephemeral" } }],
+      tools: T.DEFS,
+      messages: convo,
+    };
+    // Respaldo del servidor si un filtro de seguridad rechaza (Sonnet; Haiku no lo tiene).
+    if (/sonnet|opus|fable/.test(model)) { params.betas = ["server-side-fallback-2026-07-01"]; params.fallbacks = "default"; }
+    const stream = params.betas ? client.beta.messages.stream(params) : client.messages.stream(params);
+    let roundText = false;
+    for await (const event of stream) {
+      if (event.type === "content_block_delta" && event.delta.type === "text_delta") {
+        if (!roundText && wrote) res.write("\n\n");
+        res.write(event.delta.text); roundText = true; wrote = true;
+      }
+    }
+    const final = await stream.finalMessage();
+    if (final.stop_reason === "tool_use") {
+      convo.push({ role: "assistant", content: final.content });
+      const results = final.content.filter((b) => b.type === "tool_use").map((b) => {
+        const out = execTool(b.name, b.input, st);
+        flush(res, st);
+        return { type: "tool_result", tool_use_id: b.id, content: JSON.stringify(out), is_error: !!out.error };
+      });
+      convo.push({ role: "user", content: results });
+      continue;
+    }
+    if (final.stop_reason === "refusal") res.write("\n\nDe eso no te puedo ayudar 🙏, pero sí con todo lo de Pizza Río: menú, promos, sucursales y tu pedido. 🍕");
+    else if (final.stop_reason === "max_tokens") res.write("…");
+    return;
+  }
+  res.write(wrote ? "…" : "Uy, me enredé. ¿Me lo decís de nuevo, más cortito? 🙏");
+}
+
+/* ---------- NVIDIA NIM (API compatible con OpenAI) ---------- */
+async function runNvidia(res, messages, st, channel) {
   const OpenAI = require("openai");
   const client = new OpenAI({ apiKey: process.env.NVIDIA_API_KEY, baseURL: "https://integrate.api.nvidia.com/v1" });
-  const stream = await client.chat.completions.create({
-    model: process.env.RIA_NVIDIA_MODEL || "meta/llama-3.3-70b-instruct",
-    temperature: 0.6, top_p: 0.95, max_tokens: 1024, stream: true,
-    messages: [{ role: "system", content: SYSTEM_PROMPT + "\n\n" + liveContext(new Date()) }].concat(messages),
-  });
-  for await (const chunk of stream) {
-    const d = chunk.choices && chunk.choices[0] && chunk.choices[0].delta;
-    if (d && typeof d.content === "string" && d.content) res.write(d.content); // nunca reasoning_content
+  const tools = T.DEFS.map((d) => ({ type: "function", function: { name: d.name, description: d.description, parameters: d.input_schema } }));
+  const convo = [{ role: "system", content: SYSTEM_PROMPT + "\n\n" + liveContext(new Date(), st, channel) }].concat(messages);
+  for (let round = 0; round < MAX_TOOL_ROUNDS; round++) {
+    const r = await client.chat.completions.create({ model: process.env.RIA_NVIDIA_MODEL || "meta/llama-3.3-70b-instruct", temperature: 0.6, top_p: 0.95, max_tokens: 1024, tools, messages: convo });
+    const msg = r.choices[0].message;
+    if (msg.tool_calls && msg.tool_calls.length) {
+      convo.push({ role: "assistant", content: msg.content || "", tool_calls: msg.tool_calls });
+      msg.tool_calls.forEach((tc) => {
+        let args = {}; try { args = JSON.parse(tc.function.arguments || "{}"); } catch (e) { args = {}; }
+        const out = execTool(tc.function.name, args, st); flush(res, st);
+        convo.push({ role: "tool", tool_call_id: tc.id, content: JSON.stringify(out) });
+      });
+      continue;
+    }
+    res.write(msg.content || ""); // nunca reasoning_content
+    return;
   }
+  res.write("…");
 }
 
 module.exports = async function handler(req, res) {
@@ -96,19 +137,24 @@ module.exports = async function handler(req, res) {
   if (!prov) return fail(503, "not_configured");
   const ip = String(req.headers["x-forwarded-for"] || (req.socket && req.socket.remoteAddress) || "?").split(",")[0].trim();
   if (limited(ip)) return fail(429, "rate_limited");
-  const messages = sanitize(await readBody(req));
+  const body = await readBody(req);
+  const messages = sanitize(body);
   if (!messages) return fail(400, "bad_request");
+  const st = T.sanitizeState(body.state);
+  const channel = body.channel === "voice" ? "voice" : "text";
 
   res.statusCode = 200;
   res.setHeader("Content-Type", "text/plain; charset=utf-8");
   res.setHeader("Cache-Control", "no-store");
   res.setHeader("X-Accel-Buffering", "no");
   try {
-    if (prov === "anthropic") await streamAnthropic(res, messages);
-    else await streamNvidia(res, messages);
+    if (prov === "anthropic") await runAnthropic(res, messages, st, channel);
+    else await runNvidia(res, messages, st, channel);
   } catch (err) {
     console.error("[ria]", prov, err && err.status, err && err.message);
     res.write("\n\n[[error]]");
   }
   res.end();
 };
+
+module.exports.sanitize = sanitize;

@@ -119,9 +119,9 @@
       // P("DdUaH7oJKeK") 15/09/2026: "Llevala en combo más 1 Coca Cola de 1,5lt a BS 69"
       { id: "combo-buri", name: "Combo Buri", price: 69, img: "assets/img/combo-combo-buri.webp", star: true,
         note: "1 Pizza Churrasco + Coca-Cola 1,5 L", src: P("DdUaH7oJKeK") },
-      { id: "choclomix-combo", name: "Martes de ChocloMix", price: 36, img: "assets/img/combo-choclomix.webp",
+      { id: "choclomix-combo", ref: "choclomix", name: "Martes de ChocloMix", price: 36, img: "assets/img/combo-choclomix.webp",
         note: "1 pizza familiar mitad jamón + mitad choclo · solo martes de noviembre", src: P("Df2T-IexU_T") },
-      { id: "churrasco-sola", name: "Pizza Churrasco", price: 63, img: "assets/img/combo-churrasco.webp",
+      { id: "churrasco-sola", ref: "churrasco", name: "Pizza Churrasco", price: 63, img: "assets/img/combo-churrasco.webp",
         note: "Ojo de bife + chorizo argentino + salsa churrasquera", src: P("DdUaH7oJKeK") },
     ],
 

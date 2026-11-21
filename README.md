@@ -12,7 +12,12 @@ css/styles.css      sistema de diseño (colores de la marca arriba, con su orige
 js/data.js          TODO el contenido: menú, promos, combos, sucursales, datos (lo usan la web y Ría)
 js/app.js           render, carrito, pedido por WhatsApp, estado de sucursales, chat de Ría
 api/ria.js          endpoint de la IA (streaming, Claude o NVIDIA NIM)
-api/_prompt.js      arma el conocimiento de Ría desde js/data.js + contexto en vivo
+api/_prompt.js      reglas y conocimiento de Ría desde js/data.js + contexto en vivo
+api/_tools.js       herramientas deterministas de Ría (menú, carrito, promos, sucursales, pedido)
+js/catalog.js       catálogo único con ids y precios (web + Ría + tests)
+persona/            frases originales de Ría
+tests/golden/       golden tests (npm test)
+docs/               evidencia de funciones (recon) y plan por fases
 assets/img          posts (webp)   assets/video  reels (mp4 + póster webp)
 assets/hero         reels del abanico del hero   assets/brand  íconos e imagen para compartir
 site.webmanifest, favicon.ico
@@ -36,12 +41,22 @@ Importá el repo en Vercel (zero-config). Después agregá la clave de la IA en 
 | Variable | Para qué |
 |---|---|
 | `ANTHROPIC_API_KEY` | Clave de Claude (proveedor elegido: `anthropic`) |
-| `RIA_MODEL` | Opcional: otro modelo de Claude (por defecto `claude-sonnet-5-5`) |
+| `RIA_MODEL` | Opcional: otro modelo de Claude para texto (por defecto `claude-sonnet-5-5`) |
+| `RIA_VOICE_MODEL` | Opcional: modelo para turnos de voz (por defecto `claude-haiku-5-5`, más rápido) |
 | `NVIDIA_API_KEY` | Clave de NVIDIA NIM (si preferís `nvidia`) |
 | `RIA_NVIDIA_MODEL` | Opcional: otro modelo NIM (por defecto `meta/llama-3.3-70b-instruct`) |
 | `RIA_PROVIDER` | Opcional: fuerza `anthropic` o `nvidia` |
 
-Ría con Claude: prompt del sistema estático con prompt caching, el contexto en vivo (hora, sucursales abiertas, promo del día) va después de la conversación, esfuerzo `low` (respuestas de chat) y respaldo automático del servidor (`fallbacks: "default"`) si un filtro de seguridad rechaza una respuesta.
+## Ría: asistente de pedidos (texto y voz)
+
+- **Arma pedidos completos** en una frase («dos hawaianas con borde, delivery a Equipetrol»): busca en el menú, agrega al carrito, pide solo lo que falta, lee el resumen con el total del sistema y, con un «sí», deja listo el botón **Enviar por WhatsApp** a la sucursal elegida. El pedido se confirma ahí con la sucursal (todavía no hay POS).
+- **Nunca inventa ni calcula**: precios, promos, horarios y totales salen de herramientas deterministas (`api/_tools.js`). Productos sin precio publicado quedan «a confirmar».
+- **Carrito en vivo**: lo que Ría agrega aparece al instante en el carrito y en el armador de pedidos de la página.
+- **Voz**: botón de micrófono (español de Bolivia), respuesta hablada, «Manos libres», interrumpir tocando el micrófono, pantalla encendida durante la voz. Funciona en Chrome, Edge y Safari; en Firefox queda solo texto.
+- **«Lo de siempre»**: repite el último pedido hecho desde ese dispositivo.
+- **Pasar a una persona**: quejas, eventos o si no entiende → botón al WhatsApp de la sucursal o del call center con el motivo y el carrito.
+
+Técnica: prompt del sistema estático con prompt caching; el contexto en vivo (hora, canal, carrito, datos del pedido) va después de la conversación; esfuerzo `low`; en texto, respaldo del servidor (`fallbacks: "default"`) si un filtro de seguridad rechaza. Pruebas: `npm test` (23 golden tests, incluida una prueba de punta a punta contra una API falsa). Plan para seguimiento, pagos, teléfono y más: `docs/PLAN.md`.
 
 ## Cómo actualizar el contenido
 

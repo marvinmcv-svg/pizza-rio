@@ -45,13 +45,7 @@
   function toast(msg) { toastEl.textContent = msg; toastEl.classList.add("is-on"); clearTimeout(toastT); toastT = setTimeout(() => toastEl.classList.remove("is-on"), 2200); }
 
   let cart = store.get("pr-cart") || [];
-  const allItems = {};
-  D.menu.forEach((c) => c.items.forEach((i) => (allItems[i.id] = { id: i.id, name: "Pizza " + i.name, price: i.price })));
-  D.combos.forEach((c) => (allItems[c.id] = { id: c.id, name: c.name, price: c.price }));
-  D.weekly.forEach((w) => { if (!allItems[w.id]) allItems[w.id] = { id: w.id, name: w.title, price: w.price }; });
-  if (D.addons.bordes) D.addons.bordes.items.forEach((n, i) => (allItems["borde-" + i] = { id: "borde-" + i, name: n, price: D.addons.bordes.price }));
-  if (D.addons.extras) D.addons.extras.items.forEach((n, i) => (allItems["extra-" + i] = { id: "extra-" + i, name: n, price: D.addons.extras.price }));
-  if (D.yapa) allItems["yapa-" + D.yapa.id] = { id: "yapa-" + D.yapa.id, name: D.yapa.name + " (martes)", price: D.yapa.price };
+  const allItems = window.PR_CATALOG ? window.PR_CATALOG.build(D) : {};
   cart = cart.filter((l) => allItems[l.id]);
 
   function add(id) {
@@ -68,7 +62,7 @@
     return { sum, unknown, count };
   }
   const totalLabel = (t) => money(t.sum) + (t.unknown ? " + a confirmar" : "");
-  function saveCart() { store.set("pr-cart", cart); renderCart(); renderFlowCart(); updatePreview(); }
+  function saveCart() { store.set("pr-cart", cart); renderCart(); renderFlowCart(); updatePreview(); if (typeof renderRiaCart === "function") renderRiaCart(); }
   function renderCart() {
     const t = totals();
     $("#cartCount").textContent = t.count;
@@ -369,14 +363,31 @@
   }
   $("#sendWa").addEventListener("click", () => {
     const tg = target();
+    const bv = $("#branchSel").value;
+    if (cart.length) store.set("pr-last-order", { cart: cart.map((l) => ({ id: l.id, qty: l.qty })), branch: bv !== "" && bv !== "cc" ? +bv : null });
     $("#sendWa").href = tg.href;
     if (tg.copy && navigator.clipboard) navigator.clipboard.writeText(buildMsg()).then(() => toast("Copiamos tu mensaje: pegalo en el chat 📋"), () => {});
   });
 
-  /* ---------- Ría ---------- */
+  /* ---------- Ría: asistente de pedidos (texto + voz) ---------- */
   const ria = $("#ria"), log = $("#riaLog"), input = $("#riaInput");
   let hist = store.get("ria-hist", sessionStorage) || [], busy = false, riaReturn = null;
-  const CHIPS = ["¿Qué sucursales están abiertas?", "¿Cuál es la promo de hoy?", "¿Qué trae la Pizza Churrasco?", "Opciones sin carne"];
+  let riaOrder = store.get("ria-order", sessionStorage) || {};
+  let placed = store.get("ria-placed", sessionStorage) || [];
+  let persona = null;
+  fetch("persona/catchphrases.json").then((r) => (r.ok ? r.json() : null)).then((j) => (persona = j)).catch(() => {});
+  const usedLines = new Set();
+  function line(tag, fallback) {
+    const arr = persona && Array.isArray(persona[tag]) ? persona[tag].filter((x) => !usedLines.has(x)) : [];
+    if (!arr.length) return fallback;
+    const x = arr[Math.floor(Math.random() * arr.length)]; usedLines.add(x); return x;
+  }
+  const lastOrder = () => store.get("pr-last-order");
+  function chipsDefault() {
+    const lo = lastOrder();
+    return (lo && lo.cart && lo.cart.length ? ["Lo de siempre 🍕"] : []).concat(["¿Qué promo hay hoy?", "Quiero una pizza sin carne", "¿Qué trae la Churrasco?", "Hablar con una persona"]);
+  }
+  function setChips(list) { $("#riaChips").innerHTML = (list || []).map((c) => '<button type="button">' + esc(c) + "</button>").join(""); }
   function md(s) {
     const lines = esc(s).replace(/\*\*([^*]+)\*\*/g, "<b>$1</b>").split("\n");
     let out = "", inList = false;
@@ -388,53 +399,200 @@
     return out + (inList ? "</ul>" : "");
   }
   function bubble(role, html) { const d = document.createElement("div"); d.className = "msg msg--" + role; d.innerHTML = html; log.appendChild(d); log.scrollTop = log.scrollHeight; return d; }
+  function renderRiaCart() {
+    const t = totals(), el = $("#riaCart");
+    el.hidden = !t.count;
+    el.innerHTML = '<span>🛒 Tu pedido: <b>' + t.count + "</b> · " + esc(totalLabel(t)) + "</span><small>Ver</small>";
+  }
   function renderRia() {
     log.innerHTML = "";
-    bubble("bot", md("¡Hola! Soy **Ría**, la recepcionista virtual de Pizza Río 🍕 ¿En qué te ayudo?"));
+    const lo = lastOrder();
+    const hello = lo && lo.cart && lo.cart.length ? line("returning", "¡Volviste! ¿Te armo lo de siempre?") : line("greeting", "¡Hola! Soy Ría 🍕 ¿Qué se te antoja hoy?");
+    bubble("bot", md("**" + hello + "** Pedime todo en una frase o preguntame lo que quieras."));
     hist.forEach((m) => bubble(m.role === "user" ? "user" : "bot", m.role === "user" ? esc(m.content) : md(m.content)));
-    $("#riaChips").innerHTML = hist.length ? "" : CHIPS.map((c) => '<button type="button">' + esc(c) + "</button>").join("");
+    setChips(hist.length ? [] : chipsDefault());
+    renderRiaCart();
   }
   function openRia() { riaReturn = document.activeElement; ria.hidden = false; renderRia(); input.focus(); updateMbar(); }
-  function closeRia() { ria.hidden = true; updateMbar(); if (riaReturn) riaReturn.focus(); }
+  function closeRia() { stopVoice(); ria.hidden = true; updateMbar(); if (riaReturn) riaReturn.focus(); }
   document.addEventListener("click", (e) => { if (e.target.closest("[data-ria-open]")) { e.preventDefault(); closeNav(); openRia(); } });
   $("#riaClose").addEventListener("click", closeRia);
-  $("#riaChips").addEventListener("click", (e) => { const b = e.target.closest("button"); if (b) ask(b.textContent); });
+  $("#riaCart").addEventListener("click", () => { openDrawer(); });
+  $("#riaChips").addEventListener("click", (e) => { const b = e.target.closest("button"); if (b) ask(b.textContent.replace(/\s*🍕$/, "")); });
   $("#riaForm").addEventListener("submit", (e) => { e.preventDefault(); const v = input.value.trim(); if (v) { input.value = ""; ask(v); } });
   const ERR_LINKS = '<div class="msg__links"><a href="#menu" data-close-ria>Ver menú</a><a href="#pedir" data-close-ria>Pedir por WhatsApp</a></div>';
-  log.addEventListener("click", (e) => { if (e.target.closest("[data-close-ria]")) closeRia(); });
+  log.addEventListener("click", (e) => {
+    if (e.target.closest("[data-close-ria]")) closeRia();
+    const send = e.target.closest("[data-wa-copy]");
+    if (send && navigator.clipboard) navigator.clipboard.writeText(send.dataset.waCopy).then(() => toast("Copiamos tu pedido: pegalo en el chat 📋"), () => {});
+  });
   function errorMsg(status) {
     if ([503, 404, 501, 405].includes(status)) return "Ría se está preparando y muy pronto te va a atender 🛠️.";
     if (status === 429) return "¡Uy, muchas preguntas seguidas! Esperá un minutito 🙏.";
     return "Se me cortó la conexión 😅. Probá de nuevo en un ratito.";
   }
-  async function ask(q) {
+
+  /* eventos que manda el servidor (las herramientas) */
+  function applyEvent(ev, botEl) {
+    if (!ev || !ev.type) return;
+    if (ev.type === "cart.updated" && Array.isArray(ev.cart)) {
+      cart = ev.cart.filter((l) => allItems[l.id]).map((l) => ({ id: l.id, qty: l.qty }));
+      saveCart(); renderRiaCart();
+      const c = $("#cartCount"); c.classList.remove("bump"); void c.offsetWidth; c.classList.add("bump");
+    } else if (ev.type === "order.updated" && ev.order) {
+      riaOrder = ev.order; store.set("ria-order", riaOrder, sessionStorage);
+      // multimodal: el armador de pedidos de la página refleja lo que se dijo
+      if (ev.order.mode) setIntent(ev.order.mode);
+      if (Number.isInteger(ev.order.branch)) $("#branchSel").value = String(ev.order.branch); else if (ev.order.branch === "cc") $("#branchSel").value = "cc";
+      if (ev.order.name) flow.elements.name.value = ev.order.name;
+      if (ev.order.address) flow.elements.address.value = ev.order.address;
+      if (ev.order.reference) flow.elements.ref.value = ev.order.reference;
+      if (ev.order.note) flow.elements.note.value = ev.order.note;
+      updatePreview();
+    } else if (ev.type === "chips") {
+      setChips(ev.chips);
+    } else if (ev.type === "order.ready") {
+      if (!placed.includes(ev.token)) { placed.push(ev.token); store.set("ria-placed", placed.slice(-10), sessionStorage); }
+      store.set("pr-last-order", { cart: ev.cart, branch: Number.isInteger(ev.branch) ? ev.branch : null });
+      const card = document.createElement("div");
+      card.className = "order-card";
+      card.innerHTML = "<b>Tu pedido está listo para enviar</b><pre>" + esc(ev.message) + '</pre><a class="btn btn--wa btn--block" href="' + esc(ev.href) + '" target="_blank" rel="noopener"' + (ev.copy ? ' data-wa-copy="' + esc(ev.message) + '"' : "") + ">Enviar por " + esc(ev.label) + " →</a><small>El pedido se confirma cuando lo enviás y la sucursal te responde.</small>";
+      log.insertBefore(card, botEl && botEl.nextSibling);
+      setChips([]);
+    } else if (ev.type === "handoff") {
+      const d = document.createElement("div");
+      d.className = "order-card order-card--handoff";
+      d.innerHTML = '<b>Te paso con una persona</b><a class="btn btn--wa btn--block" href="' + esc(ev.href) + '" target="_blank" rel="noopener">' + esc(ev.label) + " por WhatsApp →</a>";
+      log.insertBefore(d, botEl && botEl.nextSibling);
+    }
+  }
+  function decodeUi(b64) {
+    try { const bin = atob(b64); const bytes = Uint8Array.from(bin, (c) => c.charCodeAt(0)); return JSON.parse(new TextDecoder().decode(bytes)); } catch (e) { return null; }
+  }
+
+  async function ask(q, opts) {
     if (busy) return; busy = true;
-    $("#riaChips").innerHTML = "";
+    const voice = !!(opts && opts.voice);
+    setChips([]);
     hist.push({ role: "user", content: q.slice(0, 1200) });
     bubble("user", esc(q));
     const bot = bubble("bot", '<span class="typing" aria-label="Ría está escribiendo"><i></i><i></i><i></i></span>');
-    let text = "", status = 0;
+    setState(voice ? "thinking" : "idle");
+    let raw = "", text = "", status = 0;
+    const state = { cart: cart.map((l) => ({ id: l.id, qty: l.qty })), order: riaOrder, lastOrder: lastOrder(), placed };
     try {
-      const res = await fetch("/api/ria", { method: "POST", headers: { "Content-Type": "application/json", "x-ria-client": "web" }, body: JSON.stringify({ messages: hist.slice(-16) }) });
+      const res = await fetch("/api/ria", { method: "POST", headers: { "Content-Type": "application/json", "x-ria-client": "web" }, body: JSON.stringify({ messages: hist.slice(-16), state, channel: voice ? "voice" : "text" }) });
       status = +(res.headers.get("X-Ria-Status") || res.status);
-      if (status !== 200) throw new Error("http");
-      if (!res.ok || !res.body) throw new Error("http");
+      if (status !== 200 || !res.ok || !res.body) throw new Error("http");
       const reader = res.body.getReader(), dec = new TextDecoder();
       for (;;) {
         const { done, value } = await reader.read(); if (done) break;
-        text += dec.decode(value, { stream: true });
-        if (text.includes("[[error]]")) throw new Error("stream");
-        bot.innerHTML = md(text); log.scrollTop = log.scrollHeight;
+        raw += dec.decode(value, { stream: true });
+        // separa eventos [[ui:...]] completos del texto
+        let m;
+        while ((m = raw.match(/\[\[ui:([A-Za-z0-9+/=]+)\]\]/))) {
+          text += raw.slice(0, m.index); raw = raw.slice(m.index + m[0].length);
+          applyEvent(decodeUi(m[1]), bot);
+        }
+        const pend = raw.indexOf("[[");
+        const safe = pend === -1 ? raw : raw.slice(0, pend);
+        if (/\[\[error\]\]/.test(raw)) throw new Error("stream");
+        if (text + safe) bot.innerHTML = md(text + safe);
+        log.scrollTop = log.scrollHeight;
       }
-      if (!text.trim()) throw new Error("empty");
+      text += raw.replace(/\[\[[^\]]*\]\]/g, "");
+      text = text.trim();
+      if (!text) throw new Error("empty");
+      bot.innerHTML = md(text);
       hist.push({ role: "assistant", content: text });
+      if (voice) speak(text); else setState("idle");
     } catch (e) {
       hist.pop();
       bot.innerHTML = "<p>" + esc(errorMsg(status)) + "</p>" + ERR_LINKS;
+      if (voice) speak(errorMsg(status)); else setState("idle");
     }
     hist = hist.slice(-20); store.set("ria-hist", hist, sessionStorage);
     busy = false; log.scrollTop = log.scrollHeight;
+    if (!$("#riaChips").innerHTML && !hist.length) setChips(chipsDefault());
   }
+
+  /* ---------- modo voz: micrófono, habla, manos libres, wake lock ---------- */
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  const canSpeak = "speechSynthesis" in window;
+  let rec = null, listening = false, speaking = false, wakeLock = null;
+  const micBtn = $("#riaMic"), hands = $("#riaHands");
+  const STATE_TXT = { idle: "Tu asistente de pedidos", listening: "Te escucho…", thinking: "Pensando…", speaking: "Hablando… (tocá el micrófono para interrumpir)" };
+  function setState(sname) {
+    ria.dataset.voice = sname;
+    $("#riaState span").textContent = sname === "listening" ? line("voice_listening", STATE_TXT.listening) : STATE_TXT[sname] || STATE_TXT.idle;
+    micBtn.setAttribute("aria-pressed", String(sname === "listening"));
+  }
+  async function keepAwake(on) {
+    try {
+      if (on && !wakeLock && navigator.wakeLock) { wakeLock = await navigator.wakeLock.request("screen"); wakeLock.addEventListener("release", () => (wakeLock = null)); }
+      if (!on && wakeLock) { await wakeLock.release(); wakeLock = null; }
+    } catch (e) { /* sin wake lock */ }
+  }
+  function voiceText(t) {
+    return t.replace(/\*\*/g, "").replace(/https?:\/\/\S+/g, "").replace(/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}]/gu, "")
+      .replace(/\+?Bs\.?\s?(\d+)/g, (m0, n) => (m0.startsWith("+") ? "más " : "") + n + " bolivianos").replace(/^\s*[-•]\s*/gm, "").replace(/\s+/g, " ").trim();
+  }
+  function pickVoice() {
+    const vs = speechSynthesis.getVoices();
+    return vs.find((v) => /es[-_](BO|419|MX|AR|US)/i.test(v.lang)) || vs.find((v) => /^es/i.test(v.lang)) || null;
+  }
+  function speak(t) {
+    if (!canSpeak) { setState("idle"); afterSpeak(); return; }
+    speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(voiceText(t));
+    const v = pickVoice(); if (v) u.voice = v;
+    u.lang = v ? v.lang : "es-419"; u.rate = 1.05;
+    u.onstart = () => { speaking = true; setState("speaking"); };
+    u.onend = u.onerror = () => { speaking = false; setState("idle"); afterSpeak(); };
+    speechSynthesis.speak(u);
+  }
+  function afterSpeak() { if (hands.checked && !ria.hidden) setTimeout(startListening, 250); else keepAwake(false); }
+  function startListening() {
+    if (!SR || listening || busy) return;
+    if (speaking) { speechSynthesis.cancel(); speaking = false; } // interrumpir a Ría (barge-in)
+    rec = new SR();
+    rec.lang = "es-BO"; rec.interimResults = true; rec.continuous = false; rec.maxAlternatives = 1;
+    let finalText = "", lastConf = 1;
+    rec.onresult = (e) => {
+      let interim = "";
+      for (let i = e.resultIndex; i < e.results.length; i++) {
+        const r = e.results[i];
+        if (r.isFinal) { finalText += r[0].transcript; lastConf = r[0].confidence || 1; } else interim += r[0].transcript;
+      }
+      input.value = (finalText + interim).trim();
+    };
+    rec.onerror = (e) => { listening = false; setState("idle"); if (e.error === "not-allowed" || e.error === "service-not-allowed") { toast("Permití el micrófono para hablar con Ría 🎙️"); hands.checked = false; } };
+    rec.onend = () => {
+      listening = false;
+      const said = finalText.trim();
+      input.value = "";
+      if (!said) { setState("idle"); if (hands.checked) setTimeout(startListening, 400); else keepAwake(false); return; }
+      if (localCommand(said)) return;
+      if (lastConf > 0 && lastConf < 0.45) { bubble("bot", md("No te escuché bien 🙈 ¿Lo repetís o lo escribís?")); setChips(chipsDefault()); setState("idle"); return; }
+      ask(said, { voice: true });
+    };
+    listening = true; setState("listening"); keepAwake(true);
+    try { rec.start(); } catch (e) { listening = false; setState("idle"); }
+  }
+  function stopVoice() { try { if (rec) rec.abort(); } catch (e) {} listening = false; if (canSpeak) speechSynthesis.cancel(); speaking = false; keepAwake(false); setState("idle"); }
+  // comandos de voz que no necesitan a la IA
+  function localCommand(t) {
+    const n = t.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").trim();
+    if (/^(para|basta|silencio|callate|stop)$/.test(n)) { stopVoice(); hands.checked = false; return true; }
+    return false;
+  }
+  if (SR) {
+    micBtn.hidden = false; $("#riaHandsWrap").hidden = false;
+    micBtn.addEventListener("click", () => { if (listening) { try { rec.stop(); } catch (e) {} } else startListening(); });
+    hands.addEventListener("change", () => { if (hands.checked) startListening(); else stopVoice(); });
+  }
+  document.addEventListener("visibilitychange", () => { if (document.hidden) stopVoice(); });
+  setState("idle");
 
   /* ---------- nav, mbar, reveal ---------- */
   const nav = $("#nav");

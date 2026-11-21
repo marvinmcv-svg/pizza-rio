@@ -532,3 +532,22 @@ button, input, select, textarea { font: inherit; color: inherit; }
   .topbar__track, .partner__badge svg { animation: none !important; }
   .reveal { opacity: 1; transform: none; }
 }
+
+/* ---------- Ría v2: voz, carrito en vivo, tarjeta de pedido ---------- */
+.hands { display: inline-flex; align-items: center; gap: 6px; font-size: .72rem; font-weight: 700; color: var(--cream); cursor: pointer; margin-right: 4px; }
+.hands input { accent-color: var(--mustard); width: 16px; height: 16px; }
+.ria__cart { display: flex; justify-content: space-between; align-items: center; gap: 10px; width: 100%; border: 0; border-bottom: 2px solid var(--cream-2); background: #fff3c4; color: var(--ink); padding: 9px 18px; font-size: .88rem; cursor: pointer; text-align: left; }
+.ria__cart small { font-weight: 700; color: var(--red); }
+.ria__form .ria__mic { width: 44px; height: 44px; flex: none; border-radius: 50%; border: 0; background: var(--cream-2); color: var(--red); display: grid; place-items: center; cursor: pointer; transition: background .2s, color .2s, transform .2s; }
+.ria__form .ria__mic:hover { transform: scale(1.06); }
+.ria[data-voice="listening"] .ria__form .ria__mic { background: var(--red); color: var(--cream); animation: micPulse 1.2s ease-out infinite; }
+.ria[data-voice="thinking"] .ria__form .ria__mic { background: var(--mustard); color: var(--wine); }
+.ria[data-voice="speaking"] .ria__form .ria__mic { background: var(--wine); color: var(--mustard); }
+.ria[data-voice="listening"] #riaState .dot { background: var(--mustard); }
+@keyframes micPulse { 0% { box-shadow: 0 0 0 0 rgba(206,22,15,.55); } 100% { box-shadow: 0 0 0 16px rgba(206,22,15,0); } }
+.order-card { align-self: stretch; background: #fff; border: 2px solid var(--wa); border-radius: 18px; padding: 14px; display: grid; gap: 10px; font-size: .9rem; }
+.order-card b { font: 800 1.05rem var(--font-display); }
+.order-card pre { margin: 0; white-space: pre-wrap; font: 500 .8rem/1.45 var(--font-body); background: #f6fbf7; border-radius: 10px; padding: 10px; max-height: 190px; overflow: auto; }
+.order-card small { opacity: .7; }
+.order-card--handoff { border-color: var(--red); }
+@media (prefers-reduced-motion: reduce) { .ria[data-voice="listening"] .ria__mic { animation: none; } }
