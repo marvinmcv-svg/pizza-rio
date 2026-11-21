@@ -101,55 +101,87 @@
   $("#drawerGo").addEventListener("click", () => { closeDrawer(); setIntent("delivery"); goStep(2); $("#pedir").scrollIntoView({ behavior: reduced ? "auto" : "smooth" }); });
   document.addEventListener("keydown", (e) => { if (e.key !== "Escape") return; if (!drawer.hidden) closeDrawer(); else if (!$("#ria").hidden) closeRia(); });
 
-  /* ---------- hero ---------- */
+  /* ---------- barra superior + reloj ---------- */
   function renderLive() {
-    const t = now(), p = todayPromo(t);
-    const known = D.branches.filter((b) => b.open);
-    const openKnown = known.filter((b) => branchStatus(b, t).open).map((b) => b.name);
-    let txt = D.branches.length + " sucursales en " + C.city;
-    if (openKnown.length) txt += " · " + openKnown.join(", ") + " abierta ahora";
-    txt += " · Hoy: " + (p ? p.title + " a " + money(p.price) : "Combo Río 2 pa' 2 a " + money(92));
-    $("#livePill span").textContent = txt;
+    const t = now();
     $("#clock").innerHTML = "<b>" + esc(t.hhmm) + "</b> en " + esc(C.city) + " · " + D.branches.length + " sucursales";
   }
-  $("#stats").innerHTML = D.stats.map((s) => '<li><b data-count="' + s.value + '" data-dec="' + (s.decimals || 0) + '" data-suf="' + esc(s.suffix) + '">' + (reduced ? s.value + s.suffix : "0") + "</b><span>" + esc(s.label) + "</span></li>").join("");
-  function countUp() {
-    if (reduced) return;
-    $$("[data-count]").forEach((el) => {
-      const to = +el.dataset.count, dec = +el.dataset.dec, suf = el.dataset.suf, t0 = performance.now();
-      const tick = (t) => { const k = Math.min(1, (t - t0) / 1400), v = to * (1 - Math.pow(1 - k, 3)); el.textContent = v.toFixed(dec) + suf; if (k < 1) requestAnimationFrame(tick); };
-      requestAnimationFrame(tick);
-    });
-  }
-  const fan = $("#fan");
-  if (!reduced && window.matchMedia("(pointer: fine)").matches) {
-    $(".hero").addEventListener("pointermove", (e) => { const r = fan.getBoundingClientRect(); fan.style.setProperty("--mx", ((e.clientX - r.left) / r.width - .5) * 2); fan.style.setProperty("--my", ((e.clientY - r.top) / r.height - .5) * 2); });
-  }
-  if (reduced) $$("#fan video").forEach((v) => { v.removeAttribute("autoplay"); v.pause(); });
+  (function topbar() {
+    const t = now(), p = todayPromo(t);
+    const items = [p ? "Hoy: " + p.title + " a " + money(p.price) : "Combo Río 2 pa' 2 a " + money(92), "Pedí por WhatsApp a tu sucursal", "Borde de Catupiry +" + money(15), D.branches.length + " sucursales en " + C.city, "#ConVosEnTodas"];
+    const html = items.map((x) => "<span>" + esc(x) + '</span><i aria-hidden="true">🍕</i>').join("");
+    $("#topbar").innerHTML = html + html;
+  })();
 
-  /* ---------- marquee ---------- */
-  const mq = ["Combo Río 2 pa' 2", "Martes de ChocloMix", "Pizza Churrasco", "Borde Catupiry", "21 sucursales", "#ConVosEnTodas", "Combo Buri"];
-  const mqHtml = mq.map((x) => "<span>" + esc(x) + "</span><i>✦</i>").join("");
-  $("#marquee").innerHTML = mqHtml + mqHtml;
-
-  /* ---------- weekly ---------- */
-  function renderWeekly() {
+  /* ---------- hero: carrusel de promos ---------- */
+  const heroSlides = (() => { const t = now(); return D.hero.filter((h) => active(h, t)); })();
+  let heroIdx = 0, heroTimer = null;
+  function renderHero() {
     const t = now();
-    $("#weekly").innerHTML = D.weekly.filter((w) => active(w, t)).map((w, i) => {
-      const today = w.day === t.dow;
-      const day = w.day == null ? "Todos los días" : (w.name || DAYS[w.day]);
-      return '<article class="wk reveal' + (today ? " is-today" : "") + '" style="--d:' + i * 70 + 'ms">' + (today ? '<span class="wk__tag">Hoy</span>' : "") +
-        '<span class="wk__day">' + esc(day) + "</span><h3>" + esc(w.title) + "</h3><p>" + esc(w.desc) + "</p>" +
-        (w.until ? '<span class="wk__pill">Hasta el ' + esc(w.until.split("-").reverse().slice(0, 2).join("/")) + "</span>" : w.plus ? '<span class="wk__pill">Extra para tu pizza</span>' : '<span class="wk__pill">' + esc(w.name) + "</span>") +
-        '<div class="wk__price"><small>' + (w.plus ? "+" : "") + esc(C.currency) + "</small>" + w.price + "</div></article>";
+    const todayI = heroSlides.findIndex((h) => h.day === t.dow);
+    if (todayI > 0) heroIdx = todayI;
+    $("#slides").innerHTML = heroSlides.map((h, i) => {
+      const today = h.day === t.dow, on = i === heroIdx;
+      const ti = on ? "" : ' tabindex="-1"';
+      return '<article class="slide' + (h.theme ? " slide--" + h.theme : "") + (h.round ? " slide--round" : "") + (on ? " is-on" : "") + '" aria-roledescription="diapositiva" aria-label="' + (i + 1) + " de " + heroSlides.length + '"' + (on ? "" : ' aria-hidden="true"') + ">" +
+        '<div class="slide__media"><img src="' + esc(h.img) + '" width="' + h.w + '" height="' + h.h + '" alt="' + esc(h.t1 + " " + h.t2) + '"' + (i === 0 || on ? ' fetchpriority="high"' : ' loading="lazy"') + "></div>" +
+        '<div class="wrap slide__in"><div class="slide__txt">' +
+        '<p class="slide__eyebrow">' + (today ? "Hoy · " : "") + esc(h.eyebrow) + "</p>" +
+        '<h2 class="slide__title"><span>' + esc(h.t1) + '</span> <span class="hl">' + esc(h.t2) + "</span></h2>" +
+        '<p class="slide__desc">' + esc(h.desc) + "</p>" +
+        '<div class="slide__buy"><p class="slide__price"><small>' + (h.plus ? "+" : "") + esc(C.currency) + "</small>" + h.price + '</p><button class="btn btn--mustard btn--lg" type="button" data-add="' + esc(h.add) + '"' + ti + ">Agregar al pedido</button></div>" +
+        '<a class="slide__src" href="' + esc(h.src) + '" target="_blank" rel="noopener"' + ti + ">Ver la publicación ↗</a>" +
+        "</div></div></article>";
     }).join("");
+    $("#heroDots").innerHTML = heroSlides.map((h, i) => '<button type="button" aria-label="Ver promo ' + (i + 1) + ": " + esc(h.t1 + " " + h.t2) + '"' + (i === heroIdx ? ' aria-current="true"' : "") + "></button>").join("");
   }
+  function goSlide(i, user) {
+    const n = heroSlides.length; heroIdx = (i + n) % n;
+    $$("#slides .slide").forEach((el, k) => {
+      const on = k === heroIdx; el.classList.toggle("is-on", on);
+      if (on) el.removeAttribute("aria-hidden"); else el.setAttribute("aria-hidden", "true");
+      $$("a, button", el).forEach((x) => (on ? x.removeAttribute("tabindex") : x.setAttribute("tabindex", "-1")));
+    });
+    $$("#heroDots button").forEach((d, k) => (k === heroIdx ? d.setAttribute("aria-current", "true") : d.removeAttribute("aria-current")));
+    if (user) startHero();
+  }
+  function startHero() { clearInterval(heroTimer); if (!reduced && heroSlides.length > 1) heroTimer = setInterval(() => goSlide(heroIdx + 1), 6500); }
+  $("#heroPrev").addEventListener("click", () => goSlide(heroIdx - 1, true));
+  $("#heroNext").addEventListener("click", () => goSlide(heroIdx + 1, true));
+  $("#heroDots").addEventListener("click", (e) => { const b = e.target.closest("button"); if (b) goSlide($$("#heroDots button").indexOf(b), true); });
+  $("#top").addEventListener("mouseenter", () => clearInterval(heroTimer));
+  $("#top").addEventListener("mouseleave", startHero);
+  $("#top").addEventListener("focusin", () => clearInterval(heroTimer));
+  (function swipe() {
+    let x0 = null;
+    const el = $("#slides");
+    el.addEventListener("touchstart", (e) => (x0 = e.touches[0].clientX), { passive: true });
+    el.addEventListener("touchend", (e) => { if (x0 == null) return; const dx = e.changedTouches[0].clientX - x0; if (Math.abs(dx) > 45) goSlide(heroIdx + (dx < 0 ? 1 : -1), true); x0 = null; });
+  })();
 
-  /* ---------- spotlight ---------- */
-  function renderSpot() {
-    const y = D.yapa, t = now(), el = $("#especial");
-    if (!y || !active(y, t)) { el.remove(); return; }
-    el.innerHTML = '<div class="wrap spot__grid"><div class="spot__img reveal"><img src="' + esc(y.img) + '" width="1200" height="782" loading="lazy" alt="' + esc(y.name) + ' a ' + money(y.price) + '"></div><div class="reveal" style="--d:100ms"><p class="eyebrow">Todos los martes de ' + esc(y.month) + '</p><h2 class="spot__title">' + esc(y.name) + '</h2><p class="spot__lede">' + esc(y.lede) + '</p><div class="spot__price"><small>' + esc(C.currency) + "</small>" + y.price + '</div><button class="btn btn--mustard btn--lg" type="button" data-add="yapa-' + esc(y.id) + '">Agregar al pedido</button><p class="spot__fine">Válido los martes hasta el 30 de ' + esc(y.month) + ".</p></div></div>";
+  /* "¿Cómo querés tu pedido?" -> arma el pedido con ese modo y esa sucursal */
+  $("#where").addEventListener("submit", (e) => {
+    e.preventDefault();
+    const mode = ($("#where").querySelector('input[name="whereMode"]:checked') || {}).value || "delivery";
+    setIntent(mode);
+    const v = $("#whereBranch").value; if (v !== "") $("#branchSel").value = v;
+    updatePreview(); goStep(2);
+    $("#pedir").scrollIntoView({ behavior: reduced ? "auto" : "smooth" });
+  });
+
+  /* ---------- "Descubrí nuestras promos" ---------- */
+  function renderPromoCards() {
+    const t = now();
+    $("#promoCards").innerHTML = D.promoCards.filter((c) => active(c, t)).map((c, i) => {
+      const today = c.day === t.dow;
+      const action = c.add ? '<button class="add" type="button" data-add="' + esc(c.add) + '" aria-label="Agregar ' + esc(c.title) + '">+</button>' : '<a class="add add--link" href="' + esc(c.href) + '" aria-label="' + esc(c.title) + '">→</a>';
+      return '<article class="pcard reveal" style="--d:' + i * 60 + 'ms">' + (today ? '<span class="pcard__today">Hoy</span>' : "") +
+        '<a class="pcard__img" href="' + esc(c.url) + '" target="_blank" rel="noopener" aria-label="' + esc(c.title) + ' en Instagram"><img src="' + esc(c.img) + '" width="900" height="1125" loading="lazy" alt="' + esc(c.title) + '"></a>' +
+        '<div class="pcard__foot"><div><h3>' + esc(c.title) + "</h3>" + (c.price != null ? '<p class="pcard__price">' + (c.plus ? "+" : "") + money(c.price) + "</p>" : '<p class="pcard__price pcard__price--info">Almuerzo en Río</p>') + "</div>" + action + "</div></article>";
+    }).join("");
+    const rail = $("#promoCards"), step = () => Math.min(rail.clientWidth * .8, 900);
+    $("#promoPrev").addEventListener("click", () => rail.scrollBy({ left: -step(), behavior: reduced ? "auto" : "smooth" }));
+    $("#promoNext").addEventListener("click", () => rail.scrollBy({ left: step(), behavior: reduced ? "auto" : "smooth" }));
   }
 
   /* ---------- menu ---------- */
@@ -202,7 +234,7 @@
   function watchVideos() {
     if (reduced || !("IntersectionObserver" in window)) return;
     const io = new IntersectionObserver((es) => es.forEach((e) => { const v = e.target; if (e.isIntersecting) { const p = v.play(); if (p && p.catch) p.catch(() => {}); } else v.pause(); }), { threshold: .35 });
-    $$("video[data-auto], #fan video, .story__media video").forEach((v) => io.observe(v));
+    $$("video[data-auto], .story__media video").forEach((v) => io.observe(v));
   }
 
   /* ---------- branches ---------- */
@@ -220,13 +252,15 @@
     const sel = $("#branchSel"), cur = sel.value;
     sel.innerHTML = '<option value="">Elegí tu sucursal</option>' + D.branches.map((b, i) => { const s = branchStatus(b, t); return '<option value="' + i + '">' + esc(b.name) + (s.open === true ? " · abierta" : s.open === false ? " · cerrada" : "") + "</option>"; }).join("") + '<option value="cc">Call center · consultas generales</option>';
     sel.value = cur;
+    const ws = $("#whereBranch"), wcur = ws.value;
+    ws.innerHTML = sel.innerHTML.replace("Elegí tu sucursal", "Elegí tu sucursal…"); ws.value = wcur;
   }
 
   /* ---------- partner, story, feed ---------- */
   function renderPartner() {
     const p = D.partner, el = $("#alianza");
     if (!p) { el.remove(); return; }
-    el.innerHTML = '<div class="wrap partner"><div class="reveal"><p class="eyebrow">Alianza · ' + esc(p.name) + '</p><h2 class="partner__title">' + esc(p.title) + "</h2><p>" + esc(p.copy) + '</p><p><small>' + esc(p.fine) + '</small></p><a class="btn btn--cream" href="' + esc(p.url) + '" target="_blank" rel="noopener">Ver la publicación ↗</a></div><div class="partner__card reveal" style="--d:120ms"><b>5</b><span>Honda Navi<br>en sorteo</span><small>Comprá · escaneá el QR · registrá tu código</small></div></div>';
+    el.innerHTML = '<div class="wrap partner"><div class="reveal"><p class="partner__by">Pizza Río <span>×</span> ' + esc(p.name) + '</p><h2 class="partner__title">' + esc(p.title) + '</h2><ol class="partner__steps"><li><b>1</b>Comprá tu pizza</li><li><b>2</b>Escaneá el QR</li><li><b>3</b>Registrá tu código</li></ol><p>Y si elegís el Combo Navi, ¡duplicás tus oportunidades de ganar! <small>' + esc(p.fine) + '</small></p><a class="btn btn--red" href="' + esc(p.url) + '" target="_blank" rel="noopener">Ver la publicación ↗</a></div><div class="partner__badge reveal" style="--d:120ms"><svg viewBox="0 0 120 120" aria-hidden="true"><defs><path id="pcirc" d="M60,60 m-47,0 a47,47 0 1,1 94,0 a47,47 0 1,1 -94,0"/></defs><text><textPath href="#pcirc">SORTEAMOS · HONDA NAVI · SANTA CRUZ ·</textPath></text></svg><b>5</b><span>motos Navi</span></div></div>';
   }
   function renderStory() {
     const s = D.story;
@@ -403,10 +437,8 @@
   }
 
   /* ---------- nav, mbar, reveal ---------- */
-  const nav = $("#nav"), burger = $("#burger"), links = $("#navLinks");
-  function closeNav() { links.classList.remove("is-open"); burger.setAttribute("aria-expanded", "false"); }
-  burger.addEventListener("click", () => { const o = !links.classList.contains("is-open"); links.classList.toggle("is-open", o); burger.setAttribute("aria-expanded", String(o)); });
-  links.addEventListener("click", (e) => { if (e.target.closest("a")) closeNav(); });
+  const nav = $("#nav");
+  function closeNav() {}
   const mbar = $("#mbar");
   const zones = ["#top", "#pedir", ".foot"].map((s) => $(s));
   const vis = new Map();
@@ -425,9 +457,10 @@
   }
 
   /* ---------- init ---------- */
-  renderLive(); renderWeekly(); renderSpot(); renderMenuTabs(); renderMenu(); renderAddons(); renderCombos(); renderReels();
+  renderLive(); renderHero(); startHero(); renderPromoCards(); renderMenuTabs(); renderMenu(); renderAddons(); renderCombos(); renderReels();
   renderBranches(); renderPartner(); renderStory(); renderFeed(); renderPicker(); renderCart(); renderFlowCart(); syncIntent(); goStep(1);
   $("#year").textContent = new Date().getFullYear();
-  watchVideos(); reveal(); countUp();
+  watchVideos(); reveal();
+  if (window.matchMedia("(max-width: 760px)").matches) $$(".foot details").forEach((d) => (d.open = false));
   setInterval(() => { renderLive(); renderBranches(); updatePreview(); }, 60000);
 })();

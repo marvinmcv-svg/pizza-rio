@@ -50,6 +50,8 @@ Todo está en `js/data.js`. Cambiá un precio, una promo o una sucursal ahí y s
 - Promo con fecha de fin: poné `until: "AAAA-MM-DD"`; el día siguiente desaparece sola.
 - Horario de una sucursal: agregá `open: "HH:MM", close: "HH:MM"` y se calcula el estado Abierto / Cierra pronto / Cerrado en hora de Bolivia.
 - Precio que hoy dice "Precio por WhatsApp": cambiá `price: null` por el número.
+- Carrusel de la portada: `hero` (una entrada por diapositiva; `until` la oculta sola al vencer, `day` la pone primera ese día).
+- Tarjetas "Descubrí nuestras promos": `promoCards` (la imagen es el post tal cual; `add` es el id que se suma al pedido).
 
 ## Falta confirmar (no está publicado, por eso no aparece)
 

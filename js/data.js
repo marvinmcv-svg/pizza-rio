@@ -131,6 +131,32 @@
       lede: "Porque ustedes lo pidieron… el ChocloMix se queda. Mitad choclo + mitad jamón, todos los martes de noviembre.", // P("DfSTFEWJZc0")
     },
 
+    // Carrusel principal (portada). Fotos recortadas de los posts originales, sin el texto del post.
+    hero: [
+      { id: "combo-rio", eyebrow: "Todos los días", t1: "El verdadero", t2: "2 pa' 2.", price: 92,
+        desc: "1 Pizza Mixta + 1 Pizza Tocinátor + Coca-Cola 1,5 L. Porque acá nadie sale lastimado, solo lleno. 😂",
+        add: "combo-rio", img: "assets/hero/slide-combo-rio.webp", w: 1100, h: 770, src: P("DeH4qdiiUee") },
+      { id: "choclomix", eyebrow: "Martes de noviembre", t1: "Martes de", t2: "ChocloMix.", price: 36, day: 2, until: "2026-11-30",
+        desc: "1 pizza familiar: mitad choclo + mitad jamón. Porque noviembre sin ChocloMix… no gracias. 😌",
+        add: "choclomix", img: "assets/hero/slide-choclomix.webp", w: 900, h: 900, round: true, src: P("DfSTFEWJZc0") },
+      { id: "churrasco", eyebrow: "Nueva", t1: "Pizza", t2: "Churrasco.", price: 63, theme: "green",
+        desc: "Corte de ojo de bife, chorizo argentino y salsa churrasquera. En Combo Buri con Coca-Cola 1,5 L: Bs 69.",
+        add: "churrasco", img: "assets/hero/slide-buri.webp", w: 1100, h: 760, src: P("DdUaH7oJKeK") },
+      { id: "borde", eyebrow: "Antojo extra", t1: "¿Con o sin", t2: "borde?", price: 15, plus: true,
+        desc: "Tu Río favorita como siempre, o con ese extra de queso Catupiry en el borde. 🤤",
+        add: "borde-0", img: "assets/hero/slide-catupiry.webp", w: 1000, h: 962, src: P("DceUjM0psfk") },
+    ],
+
+    // Tarjetas "Descubrí nuestras promos": los posts tal cual los publicó Pizza Río.
+    promoCards: [
+      { img: "assets/img/combo-rio-2pa2.webp", title: "Combo Río 2 pa' 2", price: 92, add: "combo-rio", url: P("DeH4qdiiUee") },
+      { img: "assets/img/choclomix-kit.webp", title: "Martes de ChocloMix", price: 36, add: "choclomix", day: 2, until: "2026-11-30", url: P("Df2T-IexU_T") },
+      { img: "assets/img/borde-catupiry.webp", title: "Borde de Catupiry", price: 15, plus: true, add: "borde-0", url: P("DceUjM0psfk") },
+      { img: "assets/img/combo-buri.webp", title: "Combo Buri", price: 69, add: "combo-buri", url: P("DdRXr9KxcLl") },
+      { img: "assets/img/sticker.webp", title: "Sticker dedicado", price: 4, plus: true, add: "extra-0", url: P("Dd3_-KgRwMr") },
+      { img: "assets/img/pirai-11am.webp", title: "Piraí desde las 11:00", href: "#sucursales", url: P("Dd7C2OIpjrw") },
+    ],
+
     featured: [
       { ref: "churrasco", name: "Pizza Churrasco", tag: "Nueva", video: "assets/video/churrasco-queso",
         desc: "Corte de ojo de bife, chorizo argentino y salsa churrasquera. Un homenaje a Santa Cruz.", price: 63 }, // P("DczjDIHpSeJ")
