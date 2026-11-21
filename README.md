@@ -44,7 +44,7 @@ Importá el repo en Vercel (zero-config). Después agregá la clave de la IA en 
 | `RIA_MODEL` | Opcional: otro modelo de Claude para texto (por defecto `claude-sonnet-5-5`) |
 | `RIA_VOICE_MODEL` | Opcional: modelo para turnos de voz (por defecto `claude-haiku-5-5`, más rápido) |
 | `NVIDIA_API_KEY` | Clave de NVIDIA NIM (si preferís `nvidia`) |
-| `RIA_NVIDIA_MODEL` | Opcional: otro modelo NIM (por defecto `meta/llama-3.3-70b-instruct`) |
+| `RIA_NVIDIA_MODEL` | Opcional: otro modelo NIM (por defecto `meta/llama-3.3-70b-instruct`; en producción: `nvidia/nemotron-3-ultra-550b-a55b`) |
 | `RIA_PROVIDER` | Opcional: fuerza `anthropic` o `nvidia` |
 
 ## Ría: asistente de pedidos (texto y voz)
