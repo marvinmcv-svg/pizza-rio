@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="es-BO">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Pizza Río · Backoffice</title>
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="referrer" content="no-referrer">
+  <meta name="theme-color" content="#1f0806">
+  <link rel="icon" type="image/png" sizes="32x32" href="/assets/brand/favicon-32.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@800;900&family=Montserrat:wght@400;500;600;700&display=swap">
+  <link rel="stylesheet" href="admin.css">
+</head>
+<body>
+  <!-- Ingreso -->
+  <section class="login" id="login" hidden>
+    <form class="login__card" id="loginForm">
+      <img src="/assets/img/logo.png" width="64" height="64" alt="">
+      <h1>Backoffice</h1>
+      <p>Pizza Río · solo para el equipo</p>
+      <label>Email<input type="email" name="email" autocomplete="username" required></label>
+      <label>Contraseña<input type="password" name="password" autocomplete="current-password" required minlength="6"></label>
+      <button class="btn btn--red btn--block" type="submit">Entrar</button>
+      <p class="login__msg" id="loginMsg" role="alert"></p>
+    </form>
+  </section>
+
+  <!-- Sin backend configurado -->
+  <section class="login" id="noBackend" hidden>
+    <div class="login__card">
+      <img src="/assets/img/logo.png" width="64" height="64" alt="">
+      <h1>Falta conectar la base</h1>
+      <p>Completá <code>supabaseUrl</code> y <code>supabaseKey</code> en <code>js/config.js</code> y volvé a publicar. Los pasos están en el README.</p>
+    </div>
+  </section>
+
+  <!-- App -->
+  <div class="shell" id="shell" hidden>
+    <nav class="side" aria-label="Secciones">
+      <a class="side__brand" href="#/hoy"><img src="/assets/img/logo.png" width="34" height="34" alt=""><span>Pizza Río</span></a>
+      <ul id="nav"></ul>
+      <div class="side__me" id="me"></div>
+    </nav>
+    <main class="main">
+      <header class="top">
+        <h1 id="viewTitle">…</h1>
+        <div class="top__right"><span class="live" id="live" title="Tiempo real">●</span><button class="btn btn--ghost btn--sm" id="logout" type="button">Salir</button></div>
+      </header>
+      <div id="view" class="view"></div>
+    </main>
+  </div>
+
+  <div class="toasts" id="toasts" aria-live="polite"></div>
+  <div class="scrim" id="scrim" hidden></div>
+  <aside class="drawer" id="drawer" hidden role="dialog" aria-modal="true" aria-labelledby="drawerTitle">
+    <header><h2 id="drawerTitle"></h2><button class="x" type="button" data-close aria-label="Cerrar">×</button></header>
+    <div class="drawer__body" id="drawerBody"></div>
+  </aside>
+  <div class="modal" id="modal" hidden role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <form class="modal__card" id="modalForm">
+      <header><h2 id="modalTitle"></h2><button class="x" type="button" data-close aria-label="Cerrar">×</button></header>
+      <div class="modal__body" id="modalBody"></div>
+      <footer><button class="btn btn--ghost" type="button" data-close>Cancelar</button><button class="btn btn--red" type="submit" id="modalOk">Guardar</button></footer>
+    </form>
+  </div>
+
+  <script src="/js/config.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+  <script type="module" src="app.js"></script>
+</body>
+</html>

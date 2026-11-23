@@ -264,8 +264,40 @@
     $("#feed").innerHTML = D.feed.map((f) => '<a href="' + esc(f.url) + '" target="_blank" rel="noopener" aria-label="' + esc(f.alt) + ' (Instagram)"><img src="' + esc(f.img) + '" width="900" height="1125" loading="lazy" alt="' + esc(f.alt) + '"></a>').join("");
   }
 
+  /* ---------- backend (Supabase): registra pedidos; si no responde, WhatsApp igual ---------- */
+  const CFG = window.PR_CONFIG || {};
+  const backendOn = !!(CFG.supabaseUrl && CFG.supabaseKey);
+  const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  const trackHref = (t) => location.origin + "/" + (CFG.trackPath || "sigue-tu-pizza") + "/?t=" + t;
+  const safeWa = (h) => typeof h === "string" && /^https:\/\/(wa\.me|wa\.link)\//.test(h);
+  const safeTrack = (h) => { try { const u = new URL(h); return u.protocol === "https:" && u.pathname === "/" + (CFG.trackPath || "sigue-tu-pizza") + "/" && UUID_RE.test(u.searchParams.get("t") || ""); } catch (e) { return false; } };
+  const normPhone = (v) => { let d = String(v || "").replace(/\D/g, ""); if (d.length === 11 && d.startsWith("591")) d = d.slice(3); return d.length === 8 && /^[234567]/.test(d) ? d : ""; };
+  async function rpc(fn, body) {
+    const ctrl = new AbortController(), tm = setTimeout(() => ctrl.abort(), 6000);
+    try {
+      const r = await fetch(CFG.supabaseUrl.replace(/\/+$/, "") + "/rest/v1/rpc/" + fn, { method: "POST", headers: { "Content-Type": "application/json", apikey: CFG.supabaseKey, Authorization: "Bearer " + CFG.supabaseKey }, body: JSON.stringify(body), signal: ctrl.signal });
+      const j = await r.json().catch(() => null);
+      return r.ok ? { ok: true, data: j } : { ok: false, code: (j && j.message) || "", network: r.status >= 500 || !(j && j.message) };
+    } catch (e) { return { ok: false, network: true }; } finally { clearTimeout(tm); }
+  }
+  function dbErr(code) {
+    if (/^sold_out:/.test(code)) return "Se agotó " + code.slice(9) + " en esa sucursal por hoy 😕. Elegí otra pizza u otra sucursal.";
+    return ({
+      store_paused: "Esa sucursal pausó los pedidos por un ratito. Probá con otra sucursal 🙏",
+      delivery_unavailable: "Esa sucursal no está haciendo delivery ahora. Probá para recoger u otra sucursal.",
+      pickup_unavailable: "Esa sucursal no está recibiendo pedidos para recoger ahora.",
+      invalid_phone: "Revisá tu celular: son 8 dígitos (ej. 71234567).",
+      missing_address: "Necesitamos tu dirección o tu ubicación para el delivery 🏠",
+      missing_name: "¿Cómo te llamás? 🙂",
+      rate_limited: "Recibimos varios pedidos seguidos desde tu número. Esperá unos minutos 🙏",
+      customer_blocked: "No podemos tomar este pedido en línea. Escribinos por WhatsApp.",
+      time_in_past: "Esa hora ya pasó. Elegí otra 🕒",
+    })[code] || (/^unknown_item:/.test(code) ? "Uno de los productos ya no está disponible. Revisá tu pedido." : "");
+  }
+
   /* ---------- funnel ---------- */
   const flow = $("#flow");
+  let flowRef = null, flowRec = null, pin = null;
   const F = (n) => (flow.elements[n] ? flow.elements[n].value : "");
   let step = 1, pickCat = D.menu[0].id;
   const chipVal = (name) => $$('.chips[data-name="' + name + '"] .chip.is-on').map((c) => c.dataset.v || c.textContent.trim());
@@ -287,7 +319,10 @@
     $("#flowBack").style.visibility = n === 1 ? "hidden" : "visible";
     $("#flowNext").hidden = n === 4;
     $("#flowMsg").textContent = "";
-    if (n === 4) { $("#summary").textContent = buildMsg(); $("#sendWa").href = target().href; }
+    if (n === 4) {
+      if (!flowRec) flowRef = "web-" + (crypto.randomUUID ? crypto.randomUUID() : Date.now() + "-" + Math.random().toString(36).slice(2));
+      $("#summary").textContent = buildMsg(); $("#sendWa").href = target().href;
+    }
   }
   function validate(n) {
     const i = intent();
@@ -295,14 +330,27 @@
     if (n === 2 && i === "question" && !F("qText").trim()) return "Contanos tu consulta 🙂";
     if (n === 2 && i === "event" && !F("evDate")) return "Elegí una fecha para tu evento 📅";
     if (n === 3 && !F("name").trim()) return "¿Cómo te llamás? 🙂";
-    if (n === 3 && i === "delivery" && !F("address").trim()) return "Necesitamos tu dirección para el delivery 🏠";
+    if (n === 3 && (i === "delivery" || i === "pickup") && !normPhone(F("phone"))) return "Tu celular de WhatsApp (8 dígitos) para avisarte del pedido 📱";
+    if (n === 3 && i === "delivery" && !F("address").trim() && !pin) return "Necesitamos tu dirección (o tocá «Usar mi ubicación») 🏠";
     return "";
   }
   $("#flowNext").addEventListener("click", () => { const err = validate(step); if (err) { $("#flowMsg").textContent = err; return; } goStep(step + 1); });
   $("#flowBack").addEventListener("click", () => goStep(Math.max(1, step - 1)));
   $("#steps").addEventListener("click", (e) => { const b = e.target.closest("[data-step]"); if (!b) return; const n = +b.dataset.step; for (let k = step; k < n; k++) { const err = validate(k); if (err) { $("#flowMsg").textContent = err; return; } } goStep(n); });
   flow.addEventListener("change", (e) => { if (e.target.name === "intent") syncIntent(); updatePreview(); });
-  flow.addEventListener("input", updatePreview);
+  // cualquier cambio después de registrar el pedido arma un pedido nuevo
+  const resetRec = () => { if (flowRec) { flowRec = null; $("#flowOk").hidden = true; } };
+  flow.addEventListener("input", () => { resetRec(); updatePreview(); });
+  $("#pinBtn").addEventListener("click", () => {
+    const b = $("#pinBtn");
+    if (!navigator.geolocation) { toast("Tu navegador no comparte ubicación: escribí la dirección 🏠"); return; }
+    b.disabled = true; b.firstChild.textContent = "📍 Buscando tu ubicación… ";
+    navigator.geolocation.getCurrentPosition((p) => {
+      pin = { lat: Math.round(p.coords.latitude * 1e6) / 1e6, lng: Math.round(p.coords.longitude * 1e6) / 1e6 };
+      b.disabled = false; b.classList.add("is-on"); b.firstChild.textContent = "✅ Ubicación guardada ";
+      resetRec(); updatePreview();
+    }, () => { b.disabled = false; b.firstChild.textContent = "📍 Usar mi ubicación "; toast("No pudimos obtener tu ubicación: escribí la dirección 🏠"); }, { enableHighAccuracy: true, timeout: 12000, maximumAge: 60000 });
+  });
   flow.addEventListener("click", (e) => {
     const c = e.target.closest(".chip"); if (!c) return;
     const g = c.parentElement;
@@ -345,11 +393,13 @@
       if (F("qText").trim()) L.push(F("qText").trim());
     }
     L.push("");
-    if (F("name").trim()) L.push("👤 " + F("name").trim());
+    const ph = normPhone(F("phone"));
+    if (F("name").trim()) L.push("👤 " + F("name").trim() + (ph ? " · +591 " + fmtPhone(ph) : ""));
     L.push("📍 " + (b ? "Sucursal " + b.name : "Call center"));
-    if (i === "delivery") { if (F("address").trim()) L.push("🏠 " + F("address").trim()); if (F("ref").trim()) L.push("↪ " + F("ref").trim()); }
+    if (i === "delivery") { if (F("address").trim()) L.push("🏠 " + F("address").trim()); if (F("ref").trim()) L.push("↪ " + F("ref").trim()); if (pin) L.push("📌 Ubicación: https://maps.google.com/?q=" + pin.lat + "," + pin.lng); }
     if (i === "delivery" || i === "pickup") { const w = chipVal("when")[0]; L.push("🕒 " + (w === "later" && F("whenTime") ? "Para las " + F("whenTime") : "Lo antes posible")); }
     if (F("note").trim()) L.push("💬 " + F("note").trim());
+    if (flowRec && (i === "delivery" || i === "pickup")) L.push("", "🧾 Pedido " + flowRec.code, "Seguí tu pedido: " + trackHref(flowRec.token));
     return L.join("\n");
   }
   function fmtWa(s) { return esc(s).replace(/\*([^*\n]+)\*/g, "<b>$1</b>"); }
@@ -361,12 +411,44 @@
     const chat = $("#phChat"); chat.scrollTop = chat.scrollHeight;
     if (step === 4) { $("#summary").textContent = buildMsg(); $("#sendWa").href = tg.href; }
   }
-  $("#sendWa").addEventListener("click", () => {
-    const tg = target();
-    const bv = $("#branchSel").value;
-    if (cart.length) store.set("pr-last-order", { cart: cart.map((l) => ({ id: l.id, qty: l.qty })), branch: bv !== "" && bv !== "cc" ? +bv : null });
+  let sending = false;
+  function openWa(w) {
+    const tg = target(), bv = $("#branchSel").value;
+    if (cart.length) store.set("pr-last-order", { cart: cart.map((l) => ({ id: l.id, qty: l.qty })), branch: bv !== "" && bv !== "cc" ? +bv : null, mode: intent(), code: flowRec ? flowRec.code : null, track: flowRec ? flowRec.token : null });
     $("#sendWa").href = tg.href;
     if (tg.copy && navigator.clipboard) navigator.clipboard.writeText(buildMsg()).then(() => toast("Copiamos tu mensaje: pegalo en el chat 📋"), () => {});
+    if (w) { try { w.opener = null; w.location.href = tg.href; } catch (e) { location.href = tg.href; } }
+  }
+  $("#sendWa").addEventListener("click", async (e) => {
+    const i = intent(), bv = $("#branchSel").value, b = bv !== "" && bv !== "cc" ? D.branches[+bv] : null;
+    const record = backendOn && (i === "delivery" || i === "pickup") && cart.length && b && b.id && !flowRec;
+    if (!record) { openWa(null); return; }
+    e.preventDefault();
+    if (sending) return; sending = true;
+    const w = window.open("", "_blank"); // se abre ya (en el clic) para que el navegador no lo bloquee
+    const btn = $("#sendWa"); btn.classList.add("is-busy"); $("#flowMsg").textContent = "Registrando tu pedido…";
+    const when = chipVal("when")[0] === "later" && F("whenTime") ? F("whenTime") : null;
+    const r = await rpc("place_order", { payload: {
+      client_ref: flowRef, channel: "web", store: b.id, service: i, customer_name: F("name").trim(), customer_phone: normPhone(F("phone")),
+      address: i === "delivery" ? F("address").trim() || null : null, reference: i === "delivery" ? F("ref").trim() || null : null,
+      lat: i === "delivery" && pin ? pin.lat : null, lng: i === "delivery" && pin ? pin.lng : null, scheduled_for: when, notes: F("note").trim() || null,
+      items: cart.map((l) => ({ id: (allItems[l.id] && allItems[l.id].aliasOf) || l.id, qty: l.qty })),
+    } });
+    sending = false; btn.classList.remove("is-busy"); $("#flowMsg").textContent = "";
+    if (r.ok && r.data && r.data.code && UUID_RE.test(r.data.tracking_token || "")) {
+      flowRec = { code: r.data.code, token: r.data.tracking_token };
+      const ok = $("#flowOk");
+      ok.innerHTML = "<b>✅ Pedido " + esc(flowRec.code) + (r.data.order_no ? " · #" + esc(r.data.order_no) : "") + " registrado</b><span>Enviá el mensaje por WhatsApp para que la sucursal lo confirme.</span><a href=\"" + esc(trackHref(flowRec.token)) + "\" target=\"_blank\" rel=\"noopener\">📍 Seguí tu pedido</a>";
+      ok.hidden = false;
+      $("#summary").textContent = buildMsg(); updatePreview();
+    } else if (!r.network && dbErr(r.code)) {
+      if (w) w.close();
+      $("#flowMsg").textContent = dbErr(r.code);
+      return;
+    }
+    // base caída: el pedido igual sale por WhatsApp (nunca se pierde)
+    openWa(w || null);
+    if (!w) location.href = target().href;
   });
 
   /* ---------- Ría: asistente de pedidos (texto + voz) ---------- */
@@ -374,6 +456,7 @@
   let hist = store.get("ria-hist", sessionStorage) || [], busy = false, riaReturn = null;
   let riaOrder = store.get("ria-order", sessionStorage) || {};
   let placed = store.get("ria-placed", sessionStorage) || [];
+  let riaStage = store.get("ria-stage", sessionStorage) || {};
   let persona = null;
   fetch("persona/catchphrases.json").then((r) => (r.ok ? r.json() : null)).then((j) => (persona = j)).catch(() => {});
   const usedLines = new Set();
@@ -385,7 +468,7 @@
   const lastOrder = () => store.get("pr-last-order");
   function chipsDefault() {
     const lo = lastOrder();
-    return (lo && lo.cart && lo.cart.length ? ["Lo de siempre 🍕"] : []).concat(["¿Qué promo hay hoy?", "Quiero una pizza sin carne", "¿Qué trae la Churrasco?", "Hablar con una persona"]);
+    return (lo && lo.track ? ["¿Dónde está mi pizza?"] : []).concat(lo && lo.cart && lo.cart.length ? ["Lo de siempre 🍕"] : []).concat(["¿Qué promo hay hoy?", "Quiero una pizza sin carne", "¿Qué trae la Churrasco?", "Hablar con una persona"]);
   }
   function setChips(list) { $("#riaChips").innerHTML = (list || []).map((c) => '<button type="button">' + esc(c) + "</button>").join(""); }
   function md(s) {
@@ -448,18 +531,49 @@
       if (ev.order.address) flow.elements.address.value = ev.order.address;
       if (ev.order.reference) flow.elements.ref.value = ev.order.reference;
       if (ev.order.note) flow.elements.note.value = ev.order.note;
+      if (ev.order.phone) flow.elements.phone.value = ev.order.phone;
       updatePreview();
+    } else if (ev.type === "state") {
+      riaStage = { stage: ev.stage, token: ev.token }; store.set("ria-stage", riaStage, sessionStorage);
+    } else if (ev.type === "location") {
+      const d = document.createElement("div");
+      d.className = "order-card order-card--pin";
+      d.innerHTML = '<b>Entrega con Pin</b><button type="button" class="btn btn--red btn--block">📍 Compartir mi ubicación</button><small>Solo la usamos para este delivery.</small>';
+      d.querySelector("button").addEventListener("click", (e2) => {
+        const btn = e2.currentTarget;
+        if (!navigator.geolocation) { toast("Tu navegador no comparte ubicación: escribí la dirección 🏠"); return; }
+        btn.disabled = true; btn.textContent = "📍 Buscando…";
+        navigator.geolocation.getCurrentPosition((p) => {
+          riaOrder = Object.assign({}, riaOrder, { lat: Math.round(p.coords.latitude * 1e6) / 1e6, lng: Math.round(p.coords.longitude * 1e6) / 1e6 });
+          store.set("ria-order", riaOrder, sessionStorage);
+          pin = { lat: riaOrder.lat, lng: riaOrder.lng }; $("#pinBtn").classList.add("is-on");
+          btn.textContent = "✅ Ubicación compartida";
+          ask("📍 Ubicación compartida");
+        }, () => { btn.disabled = false; btn.textContent = "📍 Compartir mi ubicación"; toast("No pudimos obtener tu ubicación: escribí la dirección 🏠"); }, { enableHighAccuracy: true, timeout: 12000, maximumAge: 60000 });
+      });
+      log.insertBefore(d, botEl && botEl.nextSibling);
+    } else if (ev.type === "track") {
+      if (!safeTrack(ev.href)) return;
+      const d = document.createElement("div");
+      d.className = "order-card order-card--track";
+      d.innerHTML = "<b>Pedido " + esc(ev.code || "") + '</b><a class="btn btn--red btn--block" href="' + esc(ev.href) + '" target="_blank" rel="noopener">📍 Seguí tu pedido</a>';
+      log.insertBefore(d, botEl && botEl.nextSibling);
     } else if (ev.type === "chips") {
       setChips(ev.chips);
     } else if (ev.type === "order.ready") {
+      if (!safeWa(ev.href)) return;
       if (!placed.includes(ev.token)) { placed.push(ev.token); store.set("ria-placed", placed.slice(-10), sessionStorage); }
-      store.set("pr-last-order", { cart: ev.cart, branch: Number.isInteger(ev.branch) ? ev.branch : null });
+      const track = ev.track && UUID_RE.test(ev.track) ? ev.track : null;
+      store.set("pr-last-order", { cart: ev.cart, branch: Number.isInteger(ev.branch) ? ev.branch : null, mode: ev.mode || null, code: track ? ev.code : null, track });
       const card = document.createElement("div");
       card.className = "order-card";
-      card.innerHTML = "<b>Tu pedido está listo para enviar</b><pre>" + esc(ev.message) + '</pre><a class="btn btn--wa btn--block" href="' + esc(ev.href) + '" target="_blank" rel="noopener"' + (ev.copy ? ' data-wa-copy="' + esc(ev.message) + '"' : "") + ">Enviar por " + esc(ev.label) + " →</a><small>El pedido se confirma cuando lo enviás y la sucursal te responde.</small>";
+      card.innerHTML = "<b>" + (track ? "Pedido " + esc(ev.code) + " listo ✅" : "Tu pedido está listo para enviar") + "</b><pre>" + esc(ev.message) + '</pre><a class="btn btn--wa btn--block" href="' + esc(ev.href) + '" target="_blank" rel="noopener"' + (ev.copy ? ' data-wa-copy="' + esc(ev.message) + '"' : "") + ">Enviar por " + esc(ev.label) + " →</a>" +
+        (track && safeTrack(ev.trackUrl) ? '<a class="btn btn--ghost btn--block" href="' + esc(ev.trackUrl) + '" target="_blank" rel="noopener">📍 Seguí tu pedido</a>' : "") +
+        "<small>La sucursal confirma el pago y el tiempo por WhatsApp.</small>";
       log.insertBefore(card, botEl && botEl.nextSibling);
       setChips([]);
     } else if (ev.type === "handoff") {
+      if (!safeWa(ev.href)) return;
       const d = document.createElement("div");
       d.className = "order-card order-card--handoff";
       d.innerHTML = '<b>Te paso con una persona</b><a class="btn btn--wa btn--block" href="' + esc(ev.href) + '" target="_blank" rel="noopener">' + esc(ev.label) + " por WhatsApp →</a>";
@@ -479,7 +593,7 @@
     const bot = bubble("bot", '<span class="typing" aria-label="Ría está escribiendo"><i></i><i></i><i></i></span>');
     setState(voice ? "thinking" : "idle");
     let raw = "", text = "", status = 0;
-    const state = { cart: cart.map((l) => ({ id: l.id, qty: l.qty })), order: riaOrder, lastOrder: lastOrder(), placed };
+    const state = { cart: cart.map((l) => ({ id: l.id, qty: l.qty })), order: riaOrder, lastOrder: lastOrder(), placed, stage: riaStage.stage, token: riaStage.token };
     try {
       const res = await fetch("/api/ria", { method: "POST", headers: { "Content-Type": "application/json", "x-ria-client": "web" }, body: JSON.stringify({ messages: hist.slice(-16), state, channel: voice ? "voice" : "text" }) });
       status = +(res.headers.get("X-Ria-Status") || res.status);

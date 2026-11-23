@@ -283,6 +283,15 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .pick em { font-style: normal; color: var(--mustard); white-space: nowrap; }
 .pick:hover { background: #3d140e; }
 .summary { background: var(--wine-2); border-radius: var(--radius-sm); padding: 18px; margin-bottom: 18px; white-space: pre-wrap; font-size: .95rem; }
+.pin-btn { display: flex; align-items: center; gap: 8px; width: 100%; margin: -4px 0 16px; background: transparent; border: 2px dashed rgba(255,247,220,.35); border-radius: 12px; padding: 10px 14px; color: var(--cream); font: 700 .92rem var(--font-body); cursor: pointer; text-align: left; }
+.pin-btn small { font-weight: 500; opacity: .7; }
+.pin-btn:hover { border-color: var(--mustard); }
+.pin-btn.is-on { border-style: solid; border-color: var(--wa); }
+.flow-ok { display: grid; gap: 4px; background: #0f3a22; border: 2px solid var(--wa); border-radius: var(--radius-sm); padding: 14px 16px; margin-bottom: 14px; }
+.flow-ok b { font: 800 1.05rem var(--font-display); }
+.flow-ok span { font-size: .9rem; opacity: .85; }
+.flow-ok a { color: var(--mustard); font-weight: 700; }
+#sendWa.is-busy { opacity: .7; pointer-events: none; }
 .flow-msg { min-height: 1.6em; color: var(--mustard); font-weight: 700; margin: 10px 0; }
 .flow-nav { display: flex; justify-content: space-between; gap: 12px; }
 .phone-wrap { position: sticky; top: 100px; }
@@ -550,4 +559,6 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .order-card pre { margin: 0; white-space: pre-wrap; font: 500 .8rem/1.45 var(--font-body); background: #f6fbf7; border-radius: 10px; padding: 10px; max-height: 190px; overflow: auto; }
 .order-card small { opacity: .7; }
 .order-card--handoff { border-color: var(--red); }
+.order-card--pin, .order-card--track { border-color: var(--red); }
+.order-card .btn--ghost { --fg: var(--red); box-shadow: inset 0 0 0 2px var(--red); }
 @media (prefers-reduced-motion: reduce) { .ria[data-voice="listening"] .ria__mic { animation: none; } }

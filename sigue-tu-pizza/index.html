@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="es-BO">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Sigue tu Pizza · Pizza Río</title>
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="referrer" content="no-referrer">
+  <meta name="theme-color" content="#ce160f">
+  <link rel="icon" type="image/png" sizes="32x32" href="/assets/brand/favicon-32.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,800;0,900;1,800&family=Montserrat:wght@400;500;600;700&display=swap">
+  <style>
+    :root {
+      --red: #ce160f; --red-deep: #940d06; --wine: #1f0806; --wine-2: #2e0d09;
+      --cream: #fff7dc; --card: #fffbec; --mustard: #fad700; --ink: #2a0c08; --wa: #25d366; --ok: #128a55;
+      --font-display: "Playfair Display", Georgia, serif; --font-body: "Montserrat", system-ui, sans-serif;
+      --shadow: 0 30px 60px -20px rgba(31,8,6,.45);
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; min-height: 100vh; background: var(--cream); color: var(--ink); font: 400 16px/1.6 var(--font-body); -webkit-font-smoothing: antialiased; }
+    a { color: inherit; }
+    .band { background: var(--red); color: var(--cream); padding: 22px 16px 120px; text-align: center; position: relative; overflow: hidden; }
+    .band::after { content: ""; position: absolute; inset: auto 0 0; height: 18px; background: radial-gradient(circle at 10px -2px, transparent 12px, var(--cream) 13px) 0 0 / 20px 18px repeat-x; }
+    .brand { display: inline-flex; align-items: center; gap: 10px; text-decoration: none; font: 900 1.25rem var(--font-display); letter-spacing: .01em; }
+    .brand img { border-radius: 50%; background: var(--cream); }
+    .eyebrow { margin: 26px 0 6px; font-size: .74rem; font-weight: 700; letter-spacing: .18em; text-transform: uppercase; color: var(--mustard); }
+    h1 { margin: 0 auto; max-width: 16ch; font: 900 clamp(2.1rem, 8vw, 3.4rem)/1.02 var(--font-display); }
+    .sub { margin: 12px auto 0; max-width: 36ch; opacity: .92; }
+    main { width: min(100% - 32px, 560px); margin: -92px auto 40px; position: relative; z-index: 1; }
+    .card { background: var(--card); border-radius: 26px; box-shadow: var(--shadow); padding: 22px 20px; }
+    .head { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+    .code { font: 800 1.35rem var(--font-display); }
+    .code small { font: 600 .85rem var(--font-body); opacity: .65; margin-left: 6px; }
+    .pill { border-radius: 999px; padding: 5px 12px; font-size: .78rem; font-weight: 700; background: var(--wine); color: var(--cream); }
+    .eta { margin: 12px 0 0; padding: 10px 14px; border-radius: 14px; background: #fff2b3; font-weight: 600; font-size: .92rem; }
+    ol.tl { list-style: none; margin: 22px 0 6px; padding: 0; position: relative; }
+    ol.tl li { position: relative; padding: 0 0 22px 44px; min-height: 34px; }
+    ol.tl li::before { content: ""; position: absolute; left: 14px; top: 26px; bottom: -2px; width: 3px; background: #ecdcae; border-radius: 3px; }
+    ol.tl li:last-child::before { display: none; }
+    ol.tl li.done::before { background: var(--ok); }
+    .dot { position: absolute; left: 0; top: 0; width: 31px; height: 31px; border-radius: 50%; display: grid; place-items: center; font-size: .95rem; background: #f3e6bf; border: 3px solid #ecdcae; }
+    li.done .dot { background: var(--ok); border-color: var(--ok); color: #fff; }
+    li.now .dot { background: var(--red); border-color: var(--red); color: #fff; animation: pulse 1.6s ease-out infinite; }
+    @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(206,22,15,.45); } 100% { box-shadow: 0 0 0 14px rgba(206,22,15,0); } }
+    .tl b { display: block; font-weight: 700; line-height: 1.3; padding-top: 4px; }
+    .tl time { font-size: .8rem; opacity: .65; }
+    li.todo b { opacity: .5; }
+    .cancel { margin: 18px 0 4px; padding: 14px 16px; border-radius: 16px; background: #fde4e2; border: 2px solid var(--red); }
+    .cancel b { font: 800 1.05rem var(--font-display); display: block; }
+    h2 { font: 800 1.1rem var(--font-display); margin: 18px 0 8px; }
+    ul.items { list-style: none; margin: 0; padding: 0; border-top: 1px dashed #d9c58a; }
+    ul.items li { display: flex; justify-content: space-between; gap: 10px; padding: 9px 0; border-bottom: 1px dashed #d9c58a; }
+    .total { display: flex; justify-content: space-between; font-weight: 700; font-size: 1.05rem; padding-top: 10px; }
+    .total small { display: block; font-weight: 500; font-size: .78rem; opacity: .7; }
+    .btn { display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 18px; min-height: 52px; border-radius: 999px; background: var(--wa); color: #08361b; font-weight: 700; text-decoration: none; padding: 12px 18px; }
+    .btn--ghost { background: transparent; color: var(--red); box-shadow: inset 0 0 0 2px var(--red); margin-top: 10px; }
+    .btn:focus-visible { outline: 3px solid var(--mustard); outline-offset: 3px; }
+    .muted { font-size: .8rem; opacity: .65; text-align: center; margin: 14px 0 0; }
+    .skel { height: 14px; border-radius: 8px; background: linear-gradient(90deg, #f2e6c4, #fbf3dc, #f2e6c4); background-size: 200% 100%; animation: sh 1.2s infinite; margin: 12px 0; }
+    @keyframes sh { to { background-position: -200% 0; } }
+    @media (prefers-reduced-motion: reduce) { li.now .dot, .skel { animation: none; } }
+  </style>
+</head>
+<body>
+  <header class="band">
+    <a class="brand" href="/"><img src="/assets/img/logo.png" width="40" height="40" alt="">Pizza Río</a>
+    <p class="eyebrow">Sigue tu Pizza</p>
+    <h1 id="h1">Buscando tu pedido…</h1>
+    <p class="sub" id="sub">Un segundito 🍕</p>
+  </header>
+  <main>
+    <section class="card" id="card" aria-live="polite">
+      <div class="skel" style="width:60%"></div><div class="skel"></div><div class="skel" style="width:80%"></div>
+    </section>
+    <p class="muted">Se actualiza solo cada 15 segundos.</p>
+  </main>
+<script src="/js/config.js"></script>
+<script>
+(function () {
+  "use strict";
+  var CFG = window.PR_CONFIG || {};
+  var CALL_CENTER = "59178462865";
+  var $ = function (s) { return document.querySelector(s); };
+  var esc = function (s) { return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); };
+  var money = function (n) { return "Bs " + (Math.round(n * 100) / 100).toLocaleString("es-BO"); };
+  var hhmm = function (iso) { return new Intl.DateTimeFormat("es-BO", { timeZone: "America/La_Paz", hour: "2-digit", minute: "2-digit", hour12: false }).format(new Date(iso)); };
+  var token = new URLSearchParams(location.search).get("t") || "";
+  var UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+  var STEPS = {
+    delivery: [["new", "Recibimos tu pedido", "🧾"], ["confirmed", "Confirmado por la sucursal", "👍"], ["preparing", "Preparando tu pizza", "👩‍🍳"], ["cooking", "En el horno", "🔥"], ["ready", "Lista", "✅"], ["out_for_delivery", "En camino", "🛵"], ["delivered", "Entregado", "🍕"]],
+    pickup: [["new", "Recibimos tu pedido", "🧾"], ["confirmed", "Confirmado por la sucursal", "👍"], ["preparing", "Preparando tu pizza", "👩‍🍳"], ["cooking", "En el horno", "🔥"], ["ready", "Lista para retirar", "✅"], ["delivered", "Retirado", "🍕"]],
+  };
+  var HEAD = {
+    new: ["¡Recibimos tu pedido!", "La sucursal lo va a confirmar en un ratito."],
+    confirmed: ["¡Pedido confirmado!", "Ya está en la fila de la cocina."],
+    preparing: ["Manos a la masa 👩‍🍳", "Estamos armando tu pizza."],
+    cooking: ["En el horno 🔥", "Falta poquito."],
+    ready: ["¡Tu pizza está lista!", ""],
+    out_for_delivery: ["¡Va en camino! 🛵", "Tené el celular a mano."],
+    delivered: ["¡Buen provecho! 🍕", "Gracias por pedir en Pizza Río. #ConVosEnTodas"],
+    cancelled: ["Pedido cancelado", "Si tenés dudas, escribile a la sucursal."],
+  };
+  var timer = null;
+
+  function waBtn(num, code) {
+    var n = num || CALL_CENTER;
+    return '<a class="btn" href="https://wa.me/' + esc(n) + "?text=" + encodeURIComponent("Hola Pizza Río, consulto por mi pedido " + (code || "")) + '" target="_blank" rel="noopener">Consultar por WhatsApp' + (code ? " (" + esc(code) + ")" : "") + "</a>";
+  }
+  function notFound() {
+    $("#h1").textContent = "No encontramos ese pedido";
+    $("#sub").textContent = "Revisá el link que te llegó, o escribinos.";
+    $("#card").innerHTML = "<p>El link de seguimiento puede estar incompleto. Si hiciste un pedido hace poco, la sucursal te puede ayudar por WhatsApp.</p>" + waBtn(null) + '<a class="btn btn--ghost" href="/">Volver a la página</a>';
+  }
+  function render(o) {
+    var steps = STEPS[o.service === "pickup" ? "pickup" : "delivery"];
+    var at = {};
+    (o.events || []).forEach(function (e) { at[e.status] = e.at; });
+    var cur = -1;
+    steps.forEach(function (s, i) { if (s[0] === o.status) cur = i; });
+    var head = HEAD[o.status] || HEAD.new;
+    $("#h1").textContent = o.status === "ready" && o.service === "pickup" ? "¡Lista para retirar!" : head[0];
+    $("#sub").textContent = (o.name ? o.name + ", " : "") + (o.status === "ready" ? (o.service === "pickup" ? "pasá por " + (o.store && o.store.name) + "." : "sale en un momento.") : head[1]);
+    document.title = o.code + " · Sigue tu Pizza";
+
+    var html = '<div class="head"><span class="code">' + esc(o.code) + (o.order_no ? "<small>#" + esc(o.order_no) + " del día</small>" : "") + '</span><span class="pill">' + (o.service === "pickup" ? "Para recoger" : "Delivery") + "</span></div>";
+    html += "<div><small>Sucursal " + esc(o.store && o.store.name) + "</small></div>";
+    if (o.status === "cancelled") {
+      html += '<div class="cancel"><b>Este pedido fue cancelado</b>' + (o.cancel_reason ? "Motivo: " + esc(o.cancel_reason) : "") + "</div>";
+    } else {
+      if (cur < 4 && o.store && o.store.prep_minutes) {
+        var base = o.scheduled_for ? new Date(o.scheduled_for) : new Date(new Date(o.created_at).getTime() + o.store.prep_minutes * 60000);
+        html += '<p class="eta">🕒 ' + (o.scheduled_for ? "Programado para las " : "Lista aprox. a las ") + esc(hhmm(base.toISOString())) + "</p>";
+      }
+      html += '<ol class="tl">' + steps.map(function (s, i) {
+        var cls = i < cur || (i === cur && o.status === "delivered") ? "done" : i === cur ? "now" : "todo";
+        return '<li class="' + cls + '"' + (i === cur ? ' aria-current="step"' : "") + '><span class="dot" aria-hidden="true">' + (cls === "done" ? "✓" : s[2]) + "</span><b>" + esc(s[1]) + "</b>" + (at[s[0]] ? "<time>" + esc(hhmm(at[s[0]])) + "</time>" : "") + "</li>";
+      }).join("") + "</ol>";
+    }
+    html += "<h2>Tu pedido</h2><ul class=\"items\">" + (o.items || []).map(function (i) { return "<li><span>" + esc(i.qty) + " × " + esc(i.name) + "</span></li>"; }).join("") + "</ul>";
+    html += '<div class="total"><span>Total' + (o.price_pending ? "<small>+ productos con precio a confirmar</small>" : "") + (o.service === "delivery" && !Number(o.delivery_fee) ? "<small>El delivery se confirma por WhatsApp</small>" : "") + "</span><span>" + money(o.total) + "</span></div>";
+    html += waBtn(o.store && o.store.whatsapp, o.code);
+    $("#card").innerHTML = html;
+    if (o.status === "delivered" || o.status === "cancelled") { clearInterval(timer); timer = null; }
+  }
+  function load() {
+    var ctrl = new AbortController(); var t = setTimeout(function () { ctrl.abort(); }, 8000);
+    return fetch(CFG.supabaseUrl.replace(/\/+$/, "") + "/rest/v1/rpc/track_order", {
+      method: "POST", signal: ctrl.signal,
+      headers: { "Content-Type": "application/json", apikey: CFG.supabaseKey, Authorization: "Bearer " + CFG.supabaseKey },
+      body: JSON.stringify({ token: token }),
+    }).then(function (r) { return r.ok ? r.json() : Promise.reject(r.status); })
+      .then(function (o) { if (o && o.code) render(o); else { clearInterval(timer); notFound(); } })
+      .catch(function () { if (!$(".code")) { $("#h1").textContent = "Sin conexión"; $("#sub").textContent = "Reintentamos en unos segundos…"; } })
+      .finally(function () { clearTimeout(t); });
+  }
+  if (!UUID.test(token) || !CFG.supabaseUrl || !CFG.supabaseKey) { notFound(); return; }
+  load();
+  timer = setInterval(function () { if (!document.hidden) load(); }, 15000);
+  document.addEventListener("visibilitychange", function () { if (!document.hidden && timer) load(); });
+})();
+</script>
+</body>
+</html>
