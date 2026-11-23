@@ -5,6 +5,7 @@
 "use strict";
 const { SYSTEM_PROMPT, liveContext } = require("./_prompt.js");
 const T = require("./_tools.js");
+const B = require("./_backend.js");
 
 const MAX_TOOL_ROUNDS = 6;
 const hits = new Map();
@@ -49,8 +50,9 @@ async function readBody(req) {
 
 const uiEvent = (ev) => "[[ui:" + Buffer.from(JSON.stringify(ev), "utf8").toString("base64") + "]]";
 function flush(res, st) { while (st.events.length) res.write(uiEvent(st.events.shift())); }
-function execTool(name, input, st) {
-  try { return T.run(name, input, st, new Date()); } catch (e) { console.error("[ria] tool", name, e && e.message); return { error: "La herramienta falló." }; }
+async function execTool(name, input, st) {
+  try { return await T.exec(name, input, st, new Date(), { backend: B, guard: st.guard }); }
+  catch (e) { console.error("[ria] tool", name, e && e.message); return { error: "La herramienta falló." }; }
 }
 
 /* ---------- Claude ---------- */
@@ -84,11 +86,12 @@ async function runAnthropic(res, messages, st, channel) {
     const final = await stream.finalMessage();
     if (final.stop_reason === "tool_use") {
       convo.push({ role: "assistant", content: final.content });
-      const results = final.content.filter((b) => b.type === "tool_use").map((b) => {
-        const out = execTool(b.name, b.input, st);
+      const results = [];
+      for (const b of final.content.filter((x) => x.type === "tool_use")) {
+        const out = await execTool(b.name, b.input, st);
         flush(res, st);
-        return { type: "tool_result", tool_use_id: b.id, content: JSON.stringify(out), is_error: !!out.error };
-      });
+        results.push({ type: "tool_result", tool_use_id: b.id, content: JSON.stringify(out), is_error: !!out.error });
+      }
       convo.push({ role: "user", content: results });
       continue;
     }
@@ -110,11 +113,11 @@ async function runNvidia(res, messages, st, channel) {
     const msg = r.choices[0].message;
     if (msg.tool_calls && msg.tool_calls.length) {
       convo.push({ role: "assistant", content: msg.content || "", tool_calls: msg.tool_calls });
-      msg.tool_calls.forEach((tc) => {
+      for (const tc of msg.tool_calls) {
         let args = {}; try { args = JSON.parse(tc.function.arguments || "{}"); } catch (e) { args = {}; }
-        const out = execTool(tc.function.name, args, st); flush(res, st);
+        const out = await execTool(tc.function.name, args, st); flush(res, st);
         convo.push({ role: "tool", tool_call_id: tc.id, content: JSON.stringify(out) });
-      });
+      }
       continue;
     }
     res.write(msg.content || ""); // nunca reasoning_content
@@ -148,6 +151,17 @@ module.exports = async function handler(req, res) {
   res.setHeader("Cache-Control", "no-store");
   res.setHeader("X-Accel-Buffering", "no");
   try {
+    // Guardia 1: la confirmación la decide el servidor. Si el pedido llegó esperando el "sí" y el
+    // último mensaje es un sí claro, se confirma ANTES de que hable el modelo; el modelo no puede
+    // confirmar en ningún otro caso.
+    const tokenAtStart = st.stage === "awaiting_confirmation" && st.token && st.token === T.orderToken(st) ? st.token : null;
+    st.guard = { tokenAtStart, yes: T.isYes(messages[messages.length - 1].content) };
+    if (tokenAtStart && st.guard.yes) {
+      st.placedNow = await execTool("place_order", { confirmation_token: tokenAtStart }, st);
+      flush(res, st);
+    } else if (st.stage === "awaiting_confirmation" && !tokenAtStart) {
+      st.stage = "browsing"; // el pedido cambió desde la lectura: hay que releer
+    }
     if (prov === "anthropic") await runAnthropic(res, messages, st, channel);
     else await runNvidia(res, messages, st, channel);
   } catch (err) {

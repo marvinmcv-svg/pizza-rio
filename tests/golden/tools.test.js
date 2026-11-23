@@ -72,13 +72,13 @@ test("lectura final pide los datos que faltan, de a uno (#15)", () => {
   run("cart_add", { item_id: "americana" }, st);
   const r = run("review_order", {}, st);
   assert.equal(r.ready, false);
-  assert.deepEqual(r.still_missing, ["delivery o recoger", "sucursal", "nombre"]);
+  assert.deepEqual(r.still_missing, ["delivery o recoger", "sucursal", "nombre", "celular (WhatsApp)"]);
 });
 
 test("pedido completo → token → WhatsApp de la sucursal elegida; idempotente (#15, #35)", () => {
   const st = fresh();
   run("cart_add", { item_id: "combo-rio" }, st);
-  const d = run("set_order_details", { mode: "delivery", branch: "equipetrol", name: "Ana", address: "Calle 5, Equipetrol", reference: "portón verde" }, st);
+  const d = run("set_order_details", { mode: "delivery", branch: "equipetrol", name: "Ana", phone: "7123-4567", address: "Calle 5, Equipetrol", reference: "portón verde" }, st);
   assert.deepEqual(d.still_missing, []);
   const rv = run("review_order", {}, st);
   assert.equal(rv.ready, true);
@@ -97,7 +97,7 @@ test("pedido completo → token → WhatsApp de la sucursal elegida; idempotente
 test("si el carrito cambia después de la lectura, hay que volver a confirmar", () => {
   const st = fresh();
   run("cart_add", { item_id: "americana" }, st);
-  run("set_order_details", { mode: "pickup", branch: "Av. Banzer", name: "Leo" }, st);
+  run("set_order_details", { mode: "pickup", branch: "Av. Banzer", name: "Leo", phone: "76543210" }, st);
   const rv = run("review_order", {}, st);
   run("cart_add", { item_id: "borde-0" }, st);
   assert.ok(run("place_order", { confirmation_token: rv.confirmation_token }, st).error);
@@ -121,12 +121,20 @@ test("promo vencida desaparece sola (ChocloMix después del 30/11)", () => {
   assert.equal(r.promos.find((p) => p.item_id === "choclomix"), undefined);
 });
 
-test("mejor oferta: Churrasco sola → sugiere Combo Buri; martes + choclo → ChocloMix (#5)", () => {
+test("ofertas: Churrasco sola → Combo Buri con total_if_accepted; martes + choclo → ChocloMix (#5)", () => {
   const st = fresh();
   run("cart_add", { item_id: "churrasco" }, st);
+  run("cart_add", { item_id: "borde-0" }, st);
   run("cart_add", { item_id: "choclo" }, st);
-  const ids = run("find_best_deal", {}, st, TUE_8PM).suggestions.map((s) => s.deal_item_id);
-  assert.deepEqual(ids, ["combo-buri", "choclomix"]);
+  const sug = run("get_deals", {}, st, TUE_8PM).suggestions;
+  assert.deepEqual(sug.map((s) => s.deal_item_id), ["combo-buri", "choclomix"]);
+  const buri = T.ITEMS["combo-buri"].price, borde = T.ITEMS["borde-0"].price;
+  // choclo no tiene precio publicado → el total lo dice
+  assert.equal(sug[0].total_if_accepted, "Bs " + (buri + borde) + " + ítems con precio a confirmar");
+  const sw = run("cart_swap_to_combo", { combo_id: "combo-buri" }, st);
+  assert.deepEqual(st.cart.map((l) => l.id).sort(), ["borde-0", "choclo", "combo-buri"]);
+  assert.equal(sw.total_known, buri + borde, "el resto del carrito queda igual");
+  assert.ok(run("cart_swap_to_combo", { combo_id: "combo-rio" }, st).error, "sin las partes no se arma");
 });
 
 test("horarios: Equipetrol abierta 20:00 y cerrada 23:00; las demás dicen «no publicado» (#8)", () => {
@@ -159,8 +167,10 @@ test("«quiero hablar con alguien» → botón de WhatsApp con el carrito (#24, 
   assert.match(decodeURIComponent(ev.href), /llegó fría[\s\S]*Pizza Americana/);
 });
 
-test("«¿dónde está mi pizza?» es honesto: no hay seguimiento en línea (#29)", () => {
-  const r = run("get_order_status", {}, fresh({ lastOrder: { cart: [{ id: "americana", qty: 1 }], branch: 1 } }));
+test("«¿dónde está mi pizza?» sin seguimiento es honesto y ofrece la sucursal (#29)", () => {
+  const st = fresh({ lastOrder: { cart: [{ id: "americana", qty: 1 }], branch: 1 } });
+  const r = run("get_order_status", {}, st);
   assert.match(r.tracking, /no tiene seguimiento/);
   assert.match(r.how_to_check, /Equipetrol/);
+  assert.match(st.events.find((e) => e.type === "handoff").href, /^https:\/\/wa\.me\/59175358717/);
 });

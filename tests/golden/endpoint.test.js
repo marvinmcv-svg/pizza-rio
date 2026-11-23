@@ -20,12 +20,20 @@ function toolTurn(model, name, input) {
   return [start(model), ["content_block_start", { index: 0, content_block: { type: "tool_use", id: "tu_1", name, input: {} } }], ["content_block_delta", { index: 0, delta: { type: "input_json_delta", partial_json: JSON.stringify(input) } }], ["content_block_stop", { index: 0 }], ["message_delta", { delta: { stop_reason: "tool_use" }, usage: { output_tokens: 5 } }], ["message_stop", {}]];
 }
 
-let server, requests = [];
+let server, requests = [], scenario = "default";
 test.before(async () => {
   server = http.createServer((req, res) => {
     let b = ""; req.on("data", (c) => (b += c)); req.on("end", () => {
       const body = JSON.parse(b); requests.push({ url: req.url, headers: req.headers, body });
-      const hasResult = body.messages.some((m) => Array.isArray(m.content) && m.content.some((c) => c.type === "tool_result"));
+      const results = body.messages.flatMap((m) => (Array.isArray(m.content) ? m.content.filter((c) => c.type === "tool_result") : []));
+      const hasResult = results.length > 0;
+      if (scenario === "eager") {
+        // Modelo apurado: lee el resumen y confirma en el mismo turno (lo que la guardia debe impedir).
+        if (results.length === 0) return sse(res, toolTurn(body.model, "review_order", {}));
+        if (results.length === 1) return sse(res, toolTurn(body.model, "place_order", { confirmation_token: JSON.parse(results[0].content).confirmation_token }));
+        return sse(res, textTurn(body.model, "¡Confirmado!"));
+      }
+      if (scenario === "after-yes") return sse(res, textTurn(body.model, "¡Listo! Tocá el botón verde."));
       if (!hasResult) sse(res, toolTurn(body.model, "cart_add", { item_id: "hawaiana", qty: 2 }));
       else sse(res, textTurn(body.model, "¡Listo! Dos Hawaianas, Bs 108."));
     });
@@ -89,4 +97,36 @@ test("sin clave: el sitio recibe 200 + X-Ria-Status 503 (sin errores en consola)
 test("historial inválido → 400", async () => {
   const r = await call({ messages: [{ role: "assistant", content: "hola" }] });
   assert.equal(r.status, 400);
+});
+
+const READY = { cart: [{ id: "hawaiana", qty: 1 }], order: { mode: "pickup", branch: 1, name: "Ana", phone: "71234567" } };
+
+test("guardia: un modelo que lee y confirma en el mismo turno NO genera pedido", async () => {
+  scenario = "eager";
+  const r = await call({ messages: [{ role: "user", content: "una hawaiana para recoger en Equipetrol, Ana, 71234567" }], state: READY });
+  const ev = uiEvents(r.out);
+  assert.equal(ev.some((e) => e.type === "order.ready"), false);
+  assert.deepEqual(ev.find((e) => e.type === "state").stage, "awaiting_confirmation");
+  const placeResult = requests.at(-1).body.messages.flatMap((m) => (Array.isArray(m.content) ? m.content : [])).find((c) => c.type === "tool_result" && /Todavía no/.test(c.content));
+  assert.ok(placeResult, "place_order rechazado");
+  scenario = "default";
+});
+
+test("guardia: el «sí» del turno siguiente lo confirma el servidor antes del modelo", async () => {
+  scenario = "after-yes"; requests = [];
+  const T = require("../../api/_tools.js");
+  const st = T.sanitizeState(READY);
+  const token = T.orderToken(st);
+  const r = await call({ messages: [{ role: "user", content: "pedí" }, { role: "assistant", content: "¿Confirmo?" }, { role: "user", content: "sí, dale" }],
+    state: Object.assign({}, READY, { stage: "awaiting_confirmation", token }) });
+  const ev = uiEvents(r.out);
+  const order = ev.find((e) => e.type === "order.ready");
+  assert.ok(order, "pedido listo");
+  assert.match(order.href, /^https:\/\/wa\.me\/59175358717/);
+  assert.match(requests[0].body.messages.at(-1).content, /PEDIDO YA CONFIRMADO POR EL SISTEMA/);
+  // con un "sí pero…" no se confirma
+  const r2 = await call({ messages: [{ role: "user", content: "pedí" }, { role: "assistant", content: "¿Confirmo?" }, { role: "user", content: "sí pero sin borde" }],
+    state: Object.assign({}, READY, { stage: "awaiting_confirmation", token }) });
+  assert.equal(uiEvents(r2.out).some((e) => e.type === "order.ready"), false);
+  scenario = "default";
 });
