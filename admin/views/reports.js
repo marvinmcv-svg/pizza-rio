@@ -25,7 +25,7 @@ export default async function (el) {
           kpi("Entrega", min(r.avg_delivery_min), "avg_delivery_min", r.avg_delivery_min, "meta ≤ 40 min") + kpi("Cancelados", r.cancelled + " (" + r.cancelled_pct + "%)", "cancelled_pct", r.cancelled_pct, "meta < 3%") +
           kpi("Entregas tarde (> 45 min)", r.late_pct == null ? "—" : r.late_pct + "%", "late_pct", r.late_pct, "meta < 20%") + "</div>" +
         (r.orders ? '<div class="charts">' +
-          chart("Pedidos por día", columns(r.by_day.map((d) => ({ k: d.day.slice(8, 10) + "/" + d.day.slice(5, 7), v: d.orders, t: d.day + ": " + d.orders + " pedidos · " + money(d.revenue) })))) +
+          chart("Pedidos por día", columns(fillDays(r.by_day))) +
           chart("Pedidos por hora", columns(fillHours(r.by_hour))) +
           chart("Ventas por sucursal", bars(r.by_store.map((s) => ({ k: s.store, v: Number(s.revenue), label: money(s.revenue), t: s.orders + " pedidos" })))) +
           chart("Pedidos por canal", bars(r.by_channel.map((c) => ({ k: CHANNEL[c.channel] || c.channel, v: c.orders, label: String(c.orders), t: money(c.revenue) })))) +
@@ -36,6 +36,14 @@ export default async function (el) {
     } catch (e) { out.innerHTML = '<div class="card empty">' + esc(errMsg(e)) + "</div>"; }
   }
   const chart = (title, svg) => '<div class="card chart"><h3>' + esc(title) + "</h3>" + svg + "</div>";
+  function fillDays(rows) {
+    const m = Object.fromEntries(rows.map((r) => [r.day, r])), out = [];
+    for (let d = new Date(from + "T12:00:00Z"); d <= new Date(to + "T12:00:00Z") && out.length < 92; d.setUTCDate(d.getUTCDate() + 1)) {
+      const k = d.toISOString().slice(0, 10), x = m[k];
+      out.push({ k: k.slice(8, 10) + "/" + k.slice(5, 7), v: x ? x.orders : 0, t: k.slice(8, 10) + "/" + k.slice(5, 7) + ": " + (x ? x.orders + " pedidos · " + money(x.revenue) : "sin pedidos") });
+    }
+    return out;
+  }
   function fillHours(rows) { const m = Object.fromEntries(rows.map((r) => [r.hour, r.orders])); const hs = rows.map((r) => r.hour); const a = Math.min(...hs, 10), b = Math.max(...hs, 23); const out = []; for (let h = a; h <= b; h++) out.push({ k: String(h), v: m[h] || 0, t: h + ":00–" + h + ":59 · " + (m[h] || 0) + " pedidos" }); return out; }
 
   // Columnas verticales (una serie): extremo de datos redondeado, anclado a la base, 2 px entre barras.

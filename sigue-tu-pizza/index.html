@@ -107,7 +107,7 @@
 
   function waBtn(num, code) {
     var n = num || CALL_CENTER;
-    return '<a class="btn" href="https://wa.me/' + esc(n) + "?text=" + encodeURIComponent("Hola Pizza Río, consulto por mi pedido " + (code || "")) + '" target="_blank" rel="noopener">Consultar por WhatsApp' + (code ? " (" + esc(code) + ")" : "") + "</a>";
+    return '<a class="btn" href="https://wa.me/' + esc(n) + "?text=" + encodeURIComponent("Hola Pizza Río, consulto por mi pedido " + (code || "")) + '" target="_blank" rel="noopener">Consultar por WhatsApp</a>";
   }
   function notFound() {
     $("#h1").textContent = "No encontramos ese pedido";

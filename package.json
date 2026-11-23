@@ -8,7 +8,9 @@
   },
   "scripts": {
     "dev": "vercel dev",
-    "test": "node --test tests/golden/*.test.js"
+    "test": "node --test tests/golden/*.test.js",
+    "test:db": "psql \"$PG_TEST_URL\" -v ON_ERROR_STOP=1 -f tests/db/rpc.test.sql",
+    "seed": "node scripts/seed-sql.js > supabase/seed.sql"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^1.12.0",
