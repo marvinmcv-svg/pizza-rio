@@ -29,6 +29,10 @@
       currency: "Bs",
       locale: "es-BO",
       countryCode: "591",
+      phonePrefix: "591",
+      phoneDigits: 8, // celulares de Bolivia: 8 dígitos (6xxxxxxx / 7xxxxxxx)
+      codePrefix: "PR", // códigos de pedido PR-ABCDE
+      trackPath: "sigue-tu-pizza",
       city: "Santa Cruz",
       slogan: "#ConVosEnTodas", // hashtag de casi todos sus posts
     },
@@ -169,29 +173,29 @@
     // Sucursales y WhatsApp: linktr.ee/pizzario.bolivia ("DELIVERY SUCURSALES SCZ").
     // Horarios: solo los que están publicados.
     branches: [
-      { name: "Montero", waLink: "https://wa.link/di2f72" }, // Linktree usa un link corto, sin número visible
+      { id: "montero", name: "Montero", waLink: "https://wa.link/di2f72" }, // Linktree usa un link corto, sin número visible
       // Caja de pizza en P("DdRYDrJRkCn"): "DELIVERY De 10:30 AM a 10:45 PM - Telf. 75358717"
-      { name: "Equipetrol", whatsapp: "59175358717", open: "10:30", close: "22:45" },
-      { name: "Av. Alemana", whatsapp: "59169006395" },
-      { name: "Av. Banzer", whatsapp: "59175500462" }, // también en el cartel, P("DfaJm0sCRJn")
-      { name: "Av. Beni", whatsapp: "59176380990" },
-      { name: "Av. Radial 27", whatsapp: "59177827722" },
+      { id: "equipetrol", name: "Equipetrol", whatsapp: "59175358717", open: "10:30", close: "22:45" },
+      { id: "av-alemana", name: "Av. Alemana", whatsapp: "59169006395" },
+      { id: "av-banzer", name: "Av. Banzer", whatsapp: "59175500462" }, // también en el cartel, P("DfaJm0sCRJn")
+      { id: "av-beni", name: "Av. Beni", whatsapp: "59176380990" },
+      { id: "av-radial-27", name: "Av. Radial 27", whatsapp: "59177827722" },
       // P("Dd7C2OIpjrw"): "Desde las 11 AM ya podés pasar por nuestra sucursal de la Piraí"
-      { name: "Av. Piraí", whatsapp: "59176327440", opensNote: "Desde las 11:00" },
-      { name: "Av. Busch", whatsapp: "59175631173" }, // Linktree: wa.me/75631173
-      { name: "Doble Vía KM 6", whatsapp: "59176445179" },
-      { name: "Villa 1ro de Mayo", whatsapp: "59178012393" },
-      { name: "Doble Vía KM 9", whatsapp: "59174160460" },
-      { name: "Melchor Pinto", whatsapp: "59177026938" },
-      { name: "Virgen de Luján", whatsapp: "59162240413" },
-      { name: "Plaza Blacutt", whatsapp: "59169013211" },
-      { name: "Paraguá", whatsapp: "59177304620" },
-      { name: "San Aurelio", whatsapp: "59177012768" },
-      { name: "Santos Dumont 2", whatsapp: "59177303391" },
-      { name: "Santos Dumont", whatsapp: "59175358848" },
-      { name: "Sevilla", whatsapp: "59162246930" },
-      { name: "Plan 3000", whatsapp: "59177387397" },
-      { name: "Pampa de la Isla", whatsapp: "59174166949" },
+      { id: "av-pirai", name: "Av. Piraí", whatsapp: "59176327440", opensNote: "Desde las 11:00" },
+      { id: "av-busch", name: "Av. Busch", whatsapp: "59175631173" }, // Linktree: wa.me/75631173
+      { id: "doble-via-km-6", name: "Doble Vía KM 6", whatsapp: "59176445179" },
+      { id: "villa-1ro-de-mayo", name: "Villa 1ro de Mayo", whatsapp: "59178012393" },
+      { id: "doble-via-km-9", name: "Doble Vía KM 9", whatsapp: "59174160460" },
+      { id: "melchor-pinto", name: "Melchor Pinto", whatsapp: "59177026938" },
+      { id: "virgen-de-lujan", name: "Virgen de Luján", whatsapp: "59162240413" },
+      { id: "plaza-blacutt", name: "Plaza Blacutt", whatsapp: "59169013211" },
+      { id: "paragua", name: "Paraguá", whatsapp: "59177304620" },
+      { id: "san-aurelio", name: "San Aurelio", whatsapp: "59177012768" },
+      { id: "santos-dumont-2", name: "Santos Dumont 2", whatsapp: "59177303391" },
+      { id: "santos-dumont", name: "Santos Dumont", whatsapp: "59175358848" },
+      { id: "sevilla", name: "Sevilla", whatsapp: "59162246930" },
+      { id: "plan-3000", name: "Plan 3000", whatsapp: "59177387397" },
+      { id: "pampa-de-la-isla", name: "Pampa de la Isla", whatsapp: "59174166949" },
     ],
 
     // Alianza vigente: P("DfvTxbOij29") 14/11/2026 (Pizza Río × Honda Center Sport)
